@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Reflection;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Annotation;
@@ -44,6 +45,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         #region Fields
 
         private readonly IServiceProvider _serviceProvider;
+        private ConcurrentDictionary<Type, IStorageValueSerializer> _serializers;
 
         #endregion
 
@@ -78,6 +80,8 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         public AnnotationsBasedMetamodelProvider(IServiceProvider serializersServiceProvider)
         {
             _serviceProvider = serializersServiceProvider ?? throw new ArgumentNullException(nameof(serializersServiceProvider));
+
+            _serializers = new ConcurrentDictionary<Type, IStorageValueSerializer>();
         }
 
         #endregion
@@ -96,7 +100,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 
             try
             {
-                return CreateSerializer(serializerType);
+                return GetSerializer(serializerType);
             }
             catch (Exception ex)
             {
@@ -115,7 +119,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 
             try
             {
-                return CreateSerializer(serializerType);
+                return GetSerializer(serializerType);
             }
             catch (Exception ex)
             {
@@ -128,26 +132,29 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 
         #region Private methods
 
-        private IStorageValueSerializer CreateSerializer(Type serializerType)
+        private IStorageValueSerializer GetSerializer(Type serializerType)
         {
-            if (!typeof(IStorageValueSerializer).IsAssignableFrom(serializerType))
+            return _serializers.GetOrAdd(serializerType, t =>
             {
-                throw new InvalidOperationException($"Type specified as the serializer should implements {typeof(IStorageValueSerializer)} interface");
-            }
+                if (!typeof(IStorageValueSerializer).IsAssignableFrom(serializerType))
+                {
+                    throw new InvalidOperationException($"Type specified as the serializer should implements {typeof(IStorageValueSerializer)} interface");
+                }
 
-            var serializer = _serviceProvider.GetService(serializerType);
+                var serializer = _serviceProvider.GetService(serializerType);
 
-            if (serializer == null)
-            {
-                throw new InvalidOperationException($"Service provider {_serviceProvider.GetType()} created null instead of the serializer instance");
-            }
+                if (serializer == null)
+                {
+                    throw new InvalidOperationException($"Service provider {_serviceProvider.GetType()} created null instead of the serializer instance");
+                }
 
-            if (serializer is IStorageValueSerializer storageValueSerializer)
-            {
-                return storageValueSerializer;
-            }
+                if (serializer is IStorageValueSerializer storageValueSerializer)
+                {
+                    return storageValueSerializer;
+                }
 
-            throw new InvalidOperationException($"Service provider {_serviceProvider.GetType()} created instance of the {serializer.GetType()} type which is not implements {typeof(IStorageValueSerializer)}");
+                throw new InvalidOperationException($"Service provider {_serviceProvider.GetType()} created instance of the {serializer.GetType()} type which is not implements {typeof(IStorageValueSerializer)}");
+            });
         }
 
         #endregion
