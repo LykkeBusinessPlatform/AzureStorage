@@ -1,36 +1,24 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Extensions.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Blob;
-using Lykke.AzureStorage.Test.Mocks;
 
 namespace Lykke.AzureStorage.Test
 {
     [TestClass]
     public class AzureBlobTest
     {
-        private readonly string _azureStorageConnectionString;
         private IBlobStorage _testBlob;
         private string _blobContainer = "LykkeAzureBlobTest";
 
-        //AzureStorage - azure account
-        public AzureBlobTest()
-        {
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true)
-                .Build();
-
-            _azureStorageConnectionString = configuration["AzureStorage"];
-        }
 
         [TestInitialize]
         public void TestInit()
         {
-            _testBlob = AzureBlobStorage.Create(new ConnStringReloadingManagerMock(_azureStorageConnectionString));
+            _testBlob = new AzureBlobInMemory();
         }
 
         [TestCleanup]
@@ -64,7 +52,7 @@ namespace Lykke.AzureStorage.Test
         [TestMethod]
         public async Task AzureBlob_CheckParallelInsert()
         {
-            var blob = AzureBlobStorage.Create(new ConnStringReloadingManagerMock(_azureStorageConnectionString));
+            IBlobStorage blob = new AzureBlobInMemory();
 
             Parallel.For(1, 11, i =>
             {
