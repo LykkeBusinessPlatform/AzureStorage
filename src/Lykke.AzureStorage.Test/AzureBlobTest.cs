@@ -1,15 +1,12 @@
-using System;
+﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AzureStorage.Tables;
-using Microsoft.WindowsAzure.Storage.Table;
-using Microsoft.WindowsAzure.Storage;
-using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AzureStorage;
 using AzureStorage.Blob;
-using AzureStorage.Queue;
+using Lykke.AzureStorage.Test.Mocks;
 
 namespace Lykke.AzureStorage.Test
 {
@@ -17,7 +14,7 @@ namespace Lykke.AzureStorage.Test
     public class AzureBlobTest
     {
         private readonly string _azureStorageConnectionString;
-        private AzureBlobStorage _testBlob;
+        private IBlobStorage _testBlob;
         private string _blobContainer = "LykkeAzureBlobTest";
 
         //AzureStorage - azure account
@@ -33,7 +30,7 @@ namespace Lykke.AzureStorage.Test
         [TestInitialize]
         public void TestInit()
         {
-            _testBlob = new AzureBlobStorage(_azureStorageConnectionString);
+            _testBlob = AzureBlobStorage.Create(new ConnStringReloadingManagerMock(_azureStorageConnectionString));
         }
 
         [TestCleanup]
@@ -67,7 +64,7 @@ namespace Lykke.AzureStorage.Test
         [TestMethod]
         public async Task AzureBlob_CheckParallelInsert()
         {
-            var blob = new AzureBlobStorage(_azureStorageConnectionString);
+            var blob = AzureBlobStorage.Create(new ConnStringReloadingManagerMock(_azureStorageConnectionString));
 
             Parallel.For(1, 11, i =>
             {
