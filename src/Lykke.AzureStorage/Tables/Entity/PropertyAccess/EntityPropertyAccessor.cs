@@ -2,19 +2,21 @@
 using Lykke.AzureStorage.Tables.Entity.Converters;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace Lykke.AzureStorage.Tables.Entity
+namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess
 {
     internal class EntityPropertyAccessor
     {
         public string PropertyName { get; }
+        public bool IsValueType { get; }
 
         private Func<object, object> Getter { get; }
         private Action<object, object> Setter { get; }
         private IStorageValueConverter Converter { get; }
 
-        public EntityPropertyAccessor(string propertyName, Func<object, object> getter, Action<object, object> setter, IStorageValueConverter converter)
+        public EntityPropertyAccessor(string propertyName, bool isValueType, Func<object, object> getter, Action<object, object> setter, IStorageValueConverter converter)
         {
             PropertyName = propertyName;
+            IsValueType = isValueType;
             Getter = getter;
             Setter = setter;
             Converter = converter;

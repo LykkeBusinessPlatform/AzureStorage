@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation
+namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories
 {
     internal class PropertyGettersFactory : IPropertyGettersFactory
     {

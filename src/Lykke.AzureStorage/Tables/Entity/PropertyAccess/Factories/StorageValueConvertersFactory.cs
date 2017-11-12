@@ -7,7 +7,7 @@ using Lykke.AzureStorage.Tables.Entity.Converters;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
 
-namespace Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation
+namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories
 {
     internal class StorageValueConvertersFactory : IStorageValueConvertersFactory
     {
