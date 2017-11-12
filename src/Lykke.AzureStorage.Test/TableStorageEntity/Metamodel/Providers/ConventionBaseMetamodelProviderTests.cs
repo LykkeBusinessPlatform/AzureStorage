@@ -2,6 +2,7 @@
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
+using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
@@ -52,7 +53,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         #endregion
 
 
-        #region Type rules
+        #region Type serializer rules
 
         [TestMethod]
         public void Test_that_for_no_matched_type_null_serializer_is_returned()
@@ -62,7 +63,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
             IMetamodelProvider metamodelProvider = provider;
 
             provider
-                .AddTypeRule(
+                .AddTypeSerializerRule(
                     t => t.Name == "FictionalTipe",
                     t => new ValueSerializerMock());
             // Act
@@ -73,17 +74,17 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         }
 
         [TestMethod]
-        public void Test_that_type_rules_applied_in_the_same_order_as_they_was_registered1()
+        public void Test_that_type_serializer_rules_applied_in_the_same_order_as_they_was_registered1()
         {
             // Arrange
             var provider = new ConventionBasedMetamodelProvider();
             IMetamodelProvider metamodelProvider = provider;
 
             provider
-                .AddTypeRule(
+                .AddTypeSerializerRule(
                     t => t.Name.EndsWith("TestType"),
                     t => new ValueSerializerMock())
-                .AddTypeRule(
+                .AddTypeSerializerRule(
                     t => t.Name == "AnotherTestType",
                     t => new AnotherValueSerializerMock());
             // Act
@@ -98,17 +99,17 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         }
 
         [TestMethod]
-        public void Test_that_type_rules_applied_in_the_same_order_as_they_was_registered2()
+        public void Test_that_type_serializer_rules_applied_in_the_same_order_as_they_was_registered2()
         {
             // Arrange
             var provider = new ConventionBasedMetamodelProvider();
             IMetamodelProvider metamodelProvider = provider;
 
             provider
-                .AddTypeRule(
+                .AddTypeSerializerRule(
                     t => t.Name == "AnotherTestType",
                     t => new AnotherValueSerializerMock())
-                .AddTypeRule(
+                .AddTypeSerializerRule(
                     t => t.Name.EndsWith("TestType"),
                     t => new ValueSerializerMock());
             // Act
@@ -125,7 +126,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         #endregion
 
 
-        #region Property rules
+        #region Property serializer rules
 
         [TestMethod]
         public void Test_that_for_no_matched_property_null_serializer_is_returned()
@@ -135,7 +136,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
             IMetamodelProvider metamodelProvider = provider;
 
             provider
-                .AddPropertyRule(
+                .AddPropertySerializerRule(
                     p => p.Name == "FictionalProperty",
                     p => new ValueSerializerMock());
             // Act
@@ -153,10 +154,10 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
             IMetamodelProvider metamodelProvider = provider;
 
             provider
-                .AddPropertyRule(
+                .AddPropertySerializerRule(
                     p => p.Name == "Property",
                     p => new ValueSerializerMock())
-                .AddPropertyRule(
+                .AddPropertySerializerRule(
                     p => p.PropertyType == typeof(string),
                     p => new AnotherValueSerializerMock());
             // Act
@@ -178,10 +179,10 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
             IMetamodelProvider metamodelProvider = provider;
 
             provider
-                .AddPropertyRule(
+                .AddPropertySerializerRule(
                     p => p.PropertyType == typeof(string),
                     p => new AnotherValueSerializerMock())
-                .AddPropertyRule(
+                .AddPropertySerializerRule(
                     p => p.Name == "Property",
                     p => new ValueSerializerMock());
             // Act
@@ -193,6 +194,66 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
             Assert.IsNotNull(anotherTestTypeSerializer);
             Assert.IsInstanceOfType(testTypeSerializer, typeof(ValueSerializerMock));
             Assert.IsInstanceOfType(anotherTestTypeSerializer, typeof(AnotherValueSerializerMock));
+        }
+
+        #endregion
+
+
+        #region Type value type merging strategy rules
+
+        [TestMethod]
+        public void Test_that_for_no_matched_type_null_value_type_merging_strategy_is_returned()
+        {
+            // Arrange
+            var provider = new ConventionBasedMetamodelProvider();
+            IMetamodelProvider metamodelProvider = provider;
+
+            provider.AddTypeValueTypesMergingStrategyRule(t => t.Name == "FictionalTipe", ValueTypeMergingStrategy.UpdateIfDirty);
+
+            // Act
+            var strategy = metamodelProvider.TryGetValueTypeMergingStrategy(typeof(TestType));
+
+            // Assert
+            Assert.IsNull(strategy);
+        }
+
+        [TestMethod]
+        public void Test_that_type_value_type_merging_strategy_rules_applied_in_the_same_order_as_they_was_registered1()
+        {
+            // Arrange
+            var provider = new ConventionBasedMetamodelProvider();
+            IMetamodelProvider metamodelProvider = provider;
+
+            provider
+                .AddTypeValueTypesMergingStrategyRule(t => t.Name.EndsWith("TestType"), ValueTypeMergingStrategy.UpdateIfDirty)
+                .AddTypeValueTypesMergingStrategyRule(t => t.Name == "AnotherTestType", ValueTypeMergingStrategy.UpdateAlways);
+
+            // Act
+            var testTypeStrategy = metamodelProvider.TryGetValueTypeMergingStrategy(typeof(TestType));
+            var anotherTestTypeStrategy = metamodelProvider.TryGetValueTypeMergingStrategy(typeof(AnotherTestType));
+
+            // Assert
+            Assert.AreEqual(ValueTypeMergingStrategy.UpdateIfDirty, testTypeStrategy);
+            Assert.AreEqual(ValueTypeMergingStrategy.UpdateIfDirty, anotherTestTypeStrategy);
+        }
+
+        [TestMethod]
+        public void Test_that_type_value_type_merging_strategy_rules_applied_in_the_same_order_as_they_was_registered2()
+        {
+            // Arrange
+            var provider = new ConventionBasedMetamodelProvider();
+            IMetamodelProvider metamodelProvider = provider;
+
+            provider
+                .AddTypeValueTypesMergingStrategyRule(t => t.Name == "AnotherTestType", ValueTypeMergingStrategy.UpdateAlways)
+                .AddTypeValueTypesMergingStrategyRule(t => t.Name.EndsWith("TestType"), ValueTypeMergingStrategy.UpdateIfDirty);
+            // Act
+            var testTypeStrategy = metamodelProvider.TryGetValueTypeMergingStrategy(typeof(TestType));
+            var anotherTestTypeStrategy = metamodelProvider.TryGetValueTypeMergingStrategy(typeof(AnotherTestType));
+
+            // Assert
+            Assert.AreEqual(ValueTypeMergingStrategy.UpdateIfDirty, testTypeStrategy);
+            Assert.AreEqual(ValueTypeMergingStrategy.UpdateAlways, anotherTestTypeStrategy);
         }
 
         #endregion

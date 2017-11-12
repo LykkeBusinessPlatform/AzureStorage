@@ -1,7 +1,9 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Annotation;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
+using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -83,6 +85,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
             [ValueSerializer(typeof(OneMoreValueSerializerMock))]
             public virtual NotSerializableTestType AnnotatedNotSerializableType { get; set; }
 
+            [UsedImplicitly]
             [ValueSerializer(typeof(OneMoreValueSerializerMock))]
             public virtual SerializableTestType AnnotatedSerializableType { get; set; }
 
@@ -95,13 +98,27 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         {
         }
 
-        private class DescendatnTestTypeWithOverridenProperties : TestTypeWithProperties
+        private class DescendantTestTypeWithOverridenProperties : TestTypeWithProperties
         {
             [ValueSerializer(typeof(AnotherValueSerializerMock))]
             public override NotSerializableTestType AnnotatedNotSerializableType { get; set; }
 
             [ValueSerializer(typeof(AnotherValueSerializerMock))]
             public override SerializableTestType AnnotatedSerializableType { get; set; }
+        }
+
+        private class TestEntityWithoutValueTypeMergingStrategy
+        {
+        }
+
+        [ValueTypeMergingStrategy(ValueTypeMergingStrategy.UpdateIfDirty)]
+        private class TestEntityWithUpdateIfDirtyValueTypeMergingStrategy
+        {
+        }
+
+        private class DescendantOfEntityWithUpdateIfDirtyValueTypeMergingStartegy :
+            TestEntityWithUpdateIfDirtyValueTypeMergingStrategy
+        {
         }
 
         #endregion
@@ -169,7 +186,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         #endregion
 
 
-        #region Type annotation
+        #region Type serializer
 
         [TestMethod]
         public void Test_that_not_annotated_type_is_not_exists_in_metamodel()
@@ -185,7 +202,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         }
 
         [TestMethod]
-        public void Test_that_simple_type_annotations_works()
+        public void Test_that_simple_type_serializer_annotations_works()
         {
             // Arrange
             var type = typeof(SerializableTestType);
@@ -200,7 +217,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         }
 
         [TestMethod]
-        public void Test_that_type_annotation_inherits()
+        public void Test_that_type_serializer_annotation_inherits()
         {
             // Arrange
             var type = typeof(DescendantSerializableTestType);
@@ -215,7 +232,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         }
 
         [TestMethod]
-        public void Test_that_inherited_type_annotation_can_be_overrided()
+        public void Test_that_inherited_type_serializer_annotation_can_be_overrided()
         {
             // Arrange
             var type = typeof(DescendantSerializableTestTypeWithOverride);
@@ -230,7 +247,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         }
 
         [TestMethod]
-        public void Test_that_overriden_inherited_type_annotation_inherits()
+        public void Test_that_overriden_inherited_type_serializer_annotation_inherits()
         {
             // Arrange
             var type = typeof(SecondLevelDescendantSerializableTestType);
@@ -247,7 +264,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         #endregion
 
 
-        #region Property annotation
+        #region Property serializer
 
         [TestMethod]
         public void Test_that_not_annotated_property_is_not_exists_in_metamodel()
@@ -309,8 +326,8 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         public void Test_that_inherited_property_annotations_overrides()
         {
             // Arrange
-            var notSerializableTypeProperty = typeof(DescendatnTestTypeWithOverridenProperties).GetProperty("AnnotatedNotSerializableType");
-            var serializableTypeProperty = typeof(DescendatnTestTypeWithOverridenProperties).GetProperty("AnnotatedSerializableType");
+            var notSerializableTypeProperty = typeof(DescendantTestTypeWithOverridenProperties).GetProperty("AnnotatedNotSerializableType");
+            var serializableTypeProperty = typeof(DescendantTestTypeWithOverridenProperties).GetProperty("AnnotatedSerializableType");
             var serializerType = typeof(AnotherValueSerializerMock);
 
             // Act
@@ -325,6 +342,41 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
             Assert.IsInstanceOfType(serializableTypePropertySerializer, serializerType);
         }
 
+        #endregion
+
+
+        #region Type value type merging strategy
+
+        [TestMethod]
+        public void Test_that_not_annotated_type_has_no_strategy()
+        {
+            // Act
+            var strategy = _metamodelProvider.TryGetValueTypeMergingStrategy(typeof(TestEntityWithoutValueTypeMergingStrategy));
+
+            // Assert
+            Assert.IsNull(strategy);
+        }
+
+        [TestMethod]
+        public void Test_that_simple_type_value_type_merging_strategy_annotations_works()
+        {
+            // Act
+            var strategy = _metamodelProvider.TryGetValueTypeMergingStrategy(typeof(TestEntityWithUpdateIfDirtyValueTypeMergingStrategy));
+
+            // Assert
+            Assert.AreEqual(ValueTypeMergingStrategy.UpdateIfDirty, strategy);
+        }
+
+        [TestMethod]
+        public void Test_that_type_value_type_merging_strategy_annotation_inherits()
+        {
+            // Act
+            var strategy = _metamodelProvider.TryGetValueTypeMergingStrategy(typeof(DescendantOfEntityWithUpdateIfDirtyValueTypeMergingStartegy));
+
+            // Assert
+            Assert.AreEqual(ValueTypeMergingStrategy.UpdateIfDirty, strategy);
+        }
+        
         #endregion
     }
 }
