@@ -1,9 +1,9 @@
 ﻿using System;
 using JetBrains.Annotations;
-using Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation;
+using Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Lykke.AzureStorage.Test.TableStorageEntity.PropertyAccessorCreation
+namespace Lykke.AzureStorage.Test.TableStorageEntity.PropertyAccess.Factories
 {
     [TestClass]
     public class PropertySettersFactoryTests

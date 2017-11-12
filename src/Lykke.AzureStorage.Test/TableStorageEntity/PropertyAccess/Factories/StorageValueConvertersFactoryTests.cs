@@ -3,12 +3,12 @@ using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Converters;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
-using Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation;
+using Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace Lykke.AzureStorage.Test.TableStorageEntity.PropertyAccessorCreation
+namespace Lykke.AzureStorage.Test.TableStorageEntity.PropertyAccess.Factories
 {
     [TestClass]
     public class StorageValueConvertersFactoryTests
@@ -48,7 +48,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.PropertyAccessorCreation
             var metamodelProvider = new ImperativeMetamodelProvider();
             var serializerMock = new Mock<IStorageValueSerializer>();
 
-            metamodelProvider.Register<SerializableTestType>(serializerMock.Object);
+            metamodelProvider.UseSerializer<SerializableTestType>(serializerMock.Object);
 
             _metamodel = new EntityMetamodelImpl(metamodelProvider);
         }
