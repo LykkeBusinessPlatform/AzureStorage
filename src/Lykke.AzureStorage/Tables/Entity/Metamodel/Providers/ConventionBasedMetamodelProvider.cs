@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
+using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 
 namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 {
@@ -15,8 +16,9 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
     {
         #region Fields
 
-        private List<(Func<Type, bool> filter, Func<Type, IStorageValueSerializer> factory)> _typeIncludeRules;
-        private List<(Func<PropertyInfo, bool> filter, Func<PropertyInfo, IStorageValueSerializer> factory)> _propertyIncludeRules;
+        private ImmutableList<(Func<Type, bool> filter, Func<Type, IStorageValueSerializer> factory)> _typeSerializerRules;
+        private ImmutableList<(Func<PropertyInfo, bool> filter, Func<PropertyInfo, IStorageValueSerializer> factory)> _propertySerializerRules;
+        private ImmutableList<(Func<Type, bool> filter, ValueTypeMergingStrategy strategy)> _typeValueTypeMergingRules;
 
         #endregion
 
@@ -28,8 +30,9 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         /// </summary>
         public ConventionBasedMetamodelProvider()
         {
-            _typeIncludeRules = new List<(Func<Type, bool>, Func<Type, IStorageValueSerializer>)>();
-            _propertyIncludeRules = new List<(Func<PropertyInfo, bool>, Func<PropertyInfo, IStorageValueSerializer>)>();
+            _typeSerializerRules = ImmutableList.Create<(Func<Type, bool>, Func<Type, IStorageValueSerializer>)>();
+            _propertySerializerRules = ImmutableList.Create<(Func<PropertyInfo, bool>, Func<PropertyInfo, IStorageValueSerializer>)>();
+            _typeValueTypeMergingRules = ImmutableList.Create<(Func<Type, bool> filter, ValueTypeMergingStrategy)>();
         }
 
         #endregion
@@ -44,7 +47,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         /// </summary>
         /// <param name="filter">Types filter</param>
         /// <param name="factory">Serializers factory</param>
-        public ConventionBasedMetamodelProvider AddTypeRule(
+        public ConventionBasedMetamodelProvider AddTypeSerializerRule(
             Func<Type, bool> filter, 
             Func<Type, IStorageValueSerializer> factory)
         {
@@ -57,7 +60,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
                 throw new ArgumentNullException(nameof(factory));
             }
 
-            _typeIncludeRules.Add((filter, factory));
+            _typeSerializerRules = _typeSerializerRules.Add((filter, factory));
 
             return this;
         }
@@ -69,7 +72,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         /// </summary>
         /// <param name="filter">Entity properties filter</param>
         /// <param name="factory">Serializers factory</param>
-        public ConventionBasedMetamodelProvider AddPropertyRule(
+        public ConventionBasedMetamodelProvider AddPropertySerializerRule(
             Func<PropertyInfo, bool> filter, 
             Func<PropertyInfo, IStorageValueSerializer> factory)
         {
@@ -82,7 +85,28 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
                 throw new ArgumentNullException(nameof(factory));
             }
 
-            _propertyIncludeRules.Add((filter, factory));
+            _propertySerializerRules = _propertySerializerRules.Add((filter, factory));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds rule, which assigns the specific <see cref="ValueTypeMergingStrategy"/> for the types,
+        /// which satisfies the <paramref name="filter"/>.
+        /// Rules will be applied in that order, in which they were added. First matching rule will be used
+        /// </summary>
+        /// <param name="filter">Types filter</param>
+        /// <param name="strategy">Value type merging strategy</param>
+        public ConventionBasedMetamodelProvider AddTypeValueTypesMergingStrategyRule(
+            Func<Type, bool> filter,
+            ValueTypeMergingStrategy strategy)
+        {
+            if (filter == null)
+            {
+                throw new ArgumentNullException(nameof(filter));
+            }
+
+            _typeValueTypeMergingRules = _typeValueTypeMergingRules.Add((filter, strategy));
 
             return this;
         }
@@ -94,7 +118,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 
         IStorageValueSerializer IMetamodelProvider.TryGetTypeSerializer(Type type)
         {
-            return _typeIncludeRules
+            return _typeSerializerRules
                 .Where(rule => rule.filter(type))
                 .Select(rule => rule.factory(type))
                 .FirstOrDefault();
@@ -102,9 +126,17 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 
         IStorageValueSerializer IMetamodelProvider.TryGetPropertySerializer(PropertyInfo propertyInfo)
         {
-            return _propertyIncludeRules
+            return _propertySerializerRules
                 .Where(rule => rule.filter(propertyInfo))
                 .Select(rule => rule.factory(propertyInfo))
+                .FirstOrDefault();
+        }
+
+        ValueTypeMergingStrategy? IMetamodelProvider.TryGetValueTypeMergingStrategy(Type type)
+        {
+            return _typeValueTypeMergingRules
+                .Where(rule => rule.filter(type))
+                .Select(rule => (ValueTypeMergingStrategy?)rule.strategy)
                 .FirstOrDefault();
         }
 

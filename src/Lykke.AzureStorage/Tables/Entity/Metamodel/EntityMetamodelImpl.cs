@@ -2,6 +2,7 @@
 using System.Reflection;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
+using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 
 namespace Lykke.AzureStorage.Tables.Entity.Metamodel
 {
@@ -28,6 +29,18 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"Failed to get storage value serializer for property {property.DeclaringType}.{property.Name}, in context of type {property.ReflectedType}", ex);
+            }
+        }
+
+        public ValueTypeMergingStrategy? TryGetValueTypeMergingStrategy(Type type)
+        {
+            try
+            {
+                return _provider.TryGetValueTypeMergingStrategy(type);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to get value type merging strategy factory for entity type {type}", ex);
             }
         }
     }

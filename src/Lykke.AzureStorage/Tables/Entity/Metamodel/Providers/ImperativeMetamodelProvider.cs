@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
+using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 
 namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 {
@@ -16,8 +17,9 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
     {
         #region Fields
 
-        private readonly Dictionary<Type, IStorageValueSerializer> _typeSerializers;
-        private readonly Dictionary<PropertyInfo, IStorageValueSerializer> _propertySerializers;
+        private ImmutableDictionary<Type, IStorageValueSerializer> _typeSerializers;
+        private ImmutableDictionary<PropertyInfo, IStorageValueSerializer> _propertySerializers;
+        private ImmutableDictionary<Type, ValueTypeMergingStrategy> _valueTypeMergingStrategies;
 
         #endregion
 
@@ -30,8 +32,9 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         /// </summary>
         public ImperativeMetamodelProvider()
         {
-            _typeSerializers = new Dictionary<Type, IStorageValueSerializer>();
-            _propertySerializers = new Dictionary<PropertyInfo, IStorageValueSerializer>();
+            _typeSerializers = ImmutableDictionary.Create<Type, IStorageValueSerializer>();
+            _propertySerializers = ImmutableDictionary.Create<PropertyInfo, IStorageValueSerializer>();
+            _valueTypeMergingStrategies = ImmutableDictionary.Create<Type, ValueTypeMergingStrategy>();
         }
 
         #endregion
@@ -44,7 +47,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         /// </summary>
         /// <param name="type">User type which will be serialized</param>
         /// <param name="serializer">User type serializer</param>
-        public IMetamodelProvider Register(Type type, IStorageValueSerializer serializer)
+        public ImperativeMetamodelProvider UseSerializer(Type type, IStorageValueSerializer serializer)
         {
             if (type == null)
             {
@@ -55,7 +58,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
                 throw new ArgumentNullException(nameof(serializer));
             }
 
-            _typeSerializers.Add(type, serializer);
+            _typeSerializers = _typeSerializers.Add(type, serializer);
 
             return this;
         }
@@ -65,7 +68,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         /// </summary>
         /// <param name="property">Entity property which will be serialized</param>
         /// <param name="serializer">Entity property serializer</param>
-        public IMetamodelProvider Register(PropertyInfo property, IStorageValueSerializer serializer)
+        public ImperativeMetamodelProvider UseSerializer(PropertyInfo property, IStorageValueSerializer serializer)
         {
             if (property == null)
             {
@@ -77,10 +80,10 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
             }
             if (!typeof(AzureTableEntity).IsAssignableFrom(property.DeclaringType))
             {
-                throw new ArgumentException($"Property should be declared in the entity type, which is descendant of the {typeof(AzureTableEntity)}");
+                throw new ArgumentException($"The property {property.DeclaringType}.{property.Name} should be declared in the entity type, which is descendant of the {typeof(AzureTableEntity)}");
             }
 
-            _propertySerializers.Add(property, serializer);
+            _propertySerializers = _propertySerializers.Add(property, serializer);
 
             return this;
         }
@@ -90,9 +93,9 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         /// </summary>
         /// <typeparam name="T">User type which will be serialized</typeparam>
         /// <param name="serializer">User type serializer</param>
-        public IMetamodelProvider Register<T>(IStorageValueSerializer serializer)
+        public ImperativeMetamodelProvider UseSerializer<T>(IStorageValueSerializer serializer)
         {
-            return Register(typeof(T), serializer);
+            return UseSerializer(typeof(T), serializer);
         }
 
         /// <summary>
@@ -101,7 +104,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         /// </summary>
         /// <param name="propertyExpression">Expression for entity property which will be serialized</param>
         /// <param name="serializer">Entity property serializer</param>
-        public IMetamodelProvider Register<TEntity, TProperty>(
+        public ImperativeMetamodelProvider UseSerializer<TEntity, TProperty>(
             Expression<Func<TEntity, TProperty>> propertyExpression,
             IStorageValueSerializer serializer)
         {
@@ -112,7 +115,39 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 
             var propertyInfo = GetPropertyInfo(propertyExpression);
 
-            return Register(propertyInfo, serializer);
+            return UseSerializer(propertyInfo, serializer);
+        }
+
+        /// <summary>
+        /// Registers the given <paramref name="strategy"/> for the given entity type <paramref name="type"/>
+        /// </summary>
+        /// <param name="type">Entuty type</param>
+        /// <param name="strategy">Value type merging strategy</param>
+        public ImperativeMetamodelProvider UseValueTypesMergingStrategy(Type type, ValueTypeMergingStrategy strategy)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+            if (!typeof(AzureTableEntity).IsAssignableFrom(type))
+            {
+                throw new ArgumentException($"The type {type} should be descendant of the {typeof(AzureTableEntity)}");
+            }
+
+            _valueTypeMergingStrategies = _valueTypeMergingStrategies.Add(type, strategy);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Registers the given <paramref name="strategy"/> for the given entity type <typeparamref name="TEntity"/>
+        /// </summary>
+        /// <typeparam name="TEntity">Entity type</typeparam>
+        /// <param name="strategy">Value type merging strategy</param>
+        public ImperativeMetamodelProvider UseValueTypesMergingStrategy<TEntity>(ValueTypeMergingStrategy strategy)
+            where TEntity : AzureTableEntity
+        {
+            return UseValueTypesMergingStrategy(typeof(TEntity), strategy);
         }
 
         #endregion
@@ -132,6 +167,16 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
             _propertySerializers.TryGetValue(propertyInfo, out var serializer);
 
             return serializer;
+        }
+
+        ValueTypeMergingStrategy? IMetamodelProvider.TryGetValueTypeMergingStrategy(Type type)
+        {
+            if (_valueTypeMergingStrategies.TryGetValue(type, out var strategy))
+            {
+                return strategy;
+            }
+
+            return null;
         }
 
         #endregion

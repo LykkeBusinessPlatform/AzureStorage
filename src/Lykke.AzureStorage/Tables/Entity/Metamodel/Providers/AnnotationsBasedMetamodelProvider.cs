@@ -4,6 +4,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Annotation;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
+using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 
 namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 {
@@ -91,7 +92,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 
         IStorageValueSerializer IMetamodelProvider.TryGetTypeSerializer(Type type)
         {
-            var serializerType = type.GetCustomAttribute<ValueSerializerAttribute>()?.SerializerType;
+            var serializerType = type.GetCustomAttribute<ValueSerializerAttribute>(true)?.SerializerType;
 
             if (serializerType == null)
             {
@@ -125,6 +126,13 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
             {
                 throw new InvalidOperationException($"Failed to create storage value serializer of type {serializerType} specified for the property", ex);
             }
+        }
+
+        ValueTypeMergingStrategy? IMetamodelProvider.TryGetValueTypeMergingStrategy(Type type)
+        {
+            var strategy = type.GetCustomAttribute<ValueTypeMergingStrategyAttribute>()?.Strategy;
+
+            return strategy;
         }
 
         #endregion
