@@ -32,11 +32,9 @@ namespace Lykke.AzureStorage.Test
         [TestMethod]
         public async Task AzureQueue_CheckParallelInsert()
         {
-            IQueueExt queue = new QueueExtInMemory();
-
             Parallel.For(1, 11, i =>
             {
-                queue.PutRawMessageAsync(i.ToString()).Wait();
+                _testQueue.PutRawMessageAsync(i.ToString()).Wait();
             });
 
             Assert.AreEqual(10, await _testQueue.Count() ?? 0);
