@@ -49,7 +49,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         /// for the given <paramref name="type"/>, or null if no strategy is specified
         /// for the given <paramref name="type"/>
         /// </summary>
-        /// <param name="type">Entity type, wich infrastructure wants to write to the storage</param>
+        /// <param name="type">Entity type, which infrastructure wants to write to the storage</param>
         /// <returns>Value type merging strategy or null</returns>
         ValueTypeMergingStrategy? TryGetValueTypeMergingStrategy(Type type);
     }

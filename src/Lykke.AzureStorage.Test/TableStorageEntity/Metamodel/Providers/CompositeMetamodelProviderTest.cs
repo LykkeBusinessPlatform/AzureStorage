@@ -79,7 +79,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         }
 
         [TestMethod]
-        public void Test_that_provider_used_in_the_order_wich_they_was_registered_when_getting_type_serializer()
+        public void Test_that_provider_used_in_the_order_which_they_was_registered_when_getting_type_serializer()
         {
             // Arrange
             var counter = 0;
@@ -198,7 +198,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         }
 
         [TestMethod]
-        public void Test_that_provider_used_in_the_order_wich_they_was_registered_when_getting_property_serializer()
+        public void Test_that_provider_used_in_the_order_which_they_was_registered_when_getting_property_serializer()
         {
             // Arrange
             var counter = 0;
@@ -317,7 +317,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         }
 
         [TestMethod]
-        public void Test_that_provider_used_in_the_order_wich_they_was_registered_when_getting_type_value_type_merging_strategy()
+        public void Test_that_provider_used_in_the_order_which_they_was_registered_when_getting_type_value_type_merging_strategy()
         {
             // Arrange
             var counter = 0;
