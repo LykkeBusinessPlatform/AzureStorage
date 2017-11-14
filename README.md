@@ -8,9 +8,9 @@ var connectionStringManager = settingsManager.ConnectionString(x => ...);
 var tableStorage = AzureTableStorage<TEntity>.Create(connectionStringManager, "TableName", log)
 ```
 
-## Using ```AzureTableStorage```
+## Using ```AzureTableEntity```
 
-```AzureTabeStorage``` allows you to use types in property of entities, which Azure does not support originally. Moreover, ```AzureTableStorage``` allows you to perform ```InsertOrMerge``` operations correctly, even if your entity contains value-type properties, which is impossible with original ```TableEntity```. To use ```AzureTabeStorage```, you should inherit your entity class from the ```AzureTableStorage```. 
+```AzureTabeStorage``` allows you to use types in property of entities, which Azure does not support originally. Moreover, ```AzureTableEntity``` allows you to perform ```InsertOrMerge``` operations correctly, even if your entity contains value-type properties, which is impossible with original ```TableEntity```. To use ```AzureTabeStorage```, you should inherit your entity class from the ```AzureTableEntity```. 
 
 ### Type conversion
 
@@ -29,7 +29,7 @@ You can choose one of value-type merging strategy for particular entity type in 
 1. ```UpdateAlways``` - Always update value type properties, even if they weren't changed. This strategy mimics original ```TableEntity``` behaviour. Use it if you don't care about correct merging of the value type properties and just want to preserve old behaviour of your legacy app. It's not recomended for new apps.
 1. ```UpdateIfDirty``` - Update value type properties only if they were changed. This is the recommended strategy to choose. It requires some additional effort from you, but you get correct merging of the value type properties. To make it work, you should implement value type properties in your entities as properties with backing fields and calls protected ```AzureTableEntity``` method ```MarkValueTypePropertyAsDirty```, despite of value being changed or not.
 
-**Exmples**
+**Examples**
 
 ```cs
 public class Quote : AzureTableEntity
@@ -73,7 +73,7 @@ As you can notice, to specify different behaviours of your entities, you should 
 1. ```CompositeMetamodelProvider```. It lets you combine all of the providers described above.
     * If type or property contained in the different providers, which you added to the ```CompositeMetamodelProvider```, metadata will be taken from the first (in order, which you added them) of the providers.
     
-**Exmples**
+**Examples**
 
 *AnnotationsBasedMetamodelProvider*
 
@@ -217,7 +217,7 @@ EntityMetamodel.Configure(provider);
 === Startup ===
 
 var provider = CompositeMetamodelProvider()
-	.AddProvider(new AnnotationBasedMetamodelProvider())
+    .AddProvider(new AnnotationBasedMetamodelProvider())
     .AddProvider(ConfigureImperativeMetamodelProvider())
     .AddProvider(ConfigureConventionBasedMetamodelProvider());
 
