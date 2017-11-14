@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
 {
     [TestClass]
-    public class ConventionBaseMetamodelProviderTests
+    public class ConventionBasedMetamodelProviderTests
     {
         #region Mocks
 
@@ -16,12 +16,12 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         {
             public string Serialize(object value)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
 
             public object Deserialize(string serialized)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
         }
 
@@ -29,12 +29,12 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
         {
             public string Serialize(object value)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
 
             public object Deserialize(string serialized)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
         }
 

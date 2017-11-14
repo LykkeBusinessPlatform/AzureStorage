@@ -34,7 +34,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.ValueTypesMerging
 
             public IStorageValueSerializer TryGetSerializer(PropertyInfo property)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
 
             public ValueTypeMergingStrategy? TryGetValueTypeMergingStrategy(Type type)
