@@ -1,11 +1,4 @@
-using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AzureStorage.Tables;
-using Microsoft.WindowsAzure.Storage.Table;
-using Microsoft.WindowsAzure.Storage;
-using System.Collections.Generic;
-using Microsoft.Extensions.Configuration;
-using System.IO;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using AzureStorage.Queue;
 
@@ -14,24 +7,12 @@ namespace Lykke.AzureStorage.Test
     [TestClass]
     public class AzureQueueExtTest
     {
-        private readonly string _azureStorageConnectionString;
-        private AzureQueueExt _testQueue;
-        private string _queueName = "LykkeAzureQueueTest";
-
-        //AzureStorage - azure account
-        public AzureQueueExtTest()
-        {
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true)
-                .Build();
-
-            _azureStorageConnectionString = configuration["AzureStorage"];
-        }
+        private IQueueExt _testQueue;
 
         [TestInitialize]
         public void TestInit()
         {
-            _testQueue = new AzureQueueExt(_azureStorageConnectionString, _queueName);
+            _testQueue = new QueueExtInMemory();
         }
 
         [TestCleanup]
@@ -51,7 +32,7 @@ namespace Lykke.AzureStorage.Test
         [TestMethod]
         public async Task AzureQueue_CheckParallelInsert()
         {
-            var queue = new AzureQueueExt(_azureStorageConnectionString, _queueName);
+            IQueueExt queue = new QueueExtInMemory();
 
             Parallel.For(1, 11, i =>
             {

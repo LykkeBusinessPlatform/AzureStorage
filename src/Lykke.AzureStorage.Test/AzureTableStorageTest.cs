@@ -1,11 +1,9 @@
-using System;
+﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AzureStorage.Tables;
 using Microsoft.WindowsAzure.Storage.Table;
-using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 using AzureStorage;
-using Lykke.AzureStorage.Test.Mocks;
 
 namespace Lykke.AzureStorage.Test
 {
@@ -17,27 +15,12 @@ namespace Lykke.AzureStorage.Test
     [TestClass]
     public class AzureTableStorageTest
     {
-        private readonly string _azureStorageConnectionString;
         private INoSQLTableStorage<TestEntity> _testEntityStorage;
-        private string _tableName = "LykkeAzureStorageTest";
-
-        //AzureStorage - azure account
-        public AzureTableStorageTest()
-        {
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true)
-                .Build();
-
-            _azureStorageConnectionString = configuration["AzureStorage"];
-        }
 
         [TestInitialize]
         public void TestInit()
         {
-            _testEntityStorage = AzureTableStorage<TestEntity>.Create(
-                new ConnStringReloadingManagerMock(_azureStorageConnectionString), 
-                _tableName, 
-                null);
+            _testEntityStorage = new NoSqlTableInMemory<TestEntity>();
         }
 
         [TestCleanup]
@@ -63,14 +46,9 @@ namespace Lykke.AzureStorage.Test
         {
             var testEntity = GetTestEntity();
 
-            var storage1 = AzureTableStorage<TestEntity>.Create(
-                new ConnStringReloadingManagerMock(_azureStorageConnectionString),
-                _tableName,
-                null);
-
             Parallel.For(1, 10, i =>
             {
-                storage1.CreateIfNotExistsAsync(testEntity).Wait();
+                _testEntityStorage.CreateIfNotExistsAsync(testEntity).Wait();
             });
 
             var createdEntity = await _testEntityStorage.GetDataAsync(testEntity.PartitionKey, testEntity.RowKey);
@@ -95,10 +73,7 @@ namespace Lykke.AzureStorage.Test
         {
             var testEntity = GetTestEntity();
 
-            var storage1 = AzureTableStorage<TestEntity>.CreateWithCache(
-                new ConnStringReloadingManagerMock(_azureStorageConnectionString), 
-                _tableName,
-                null);
+            var storage1 = new NoSqlTableInMemory<TestEntity>();
 
             Parallel.For(1, 10, i =>
             {
