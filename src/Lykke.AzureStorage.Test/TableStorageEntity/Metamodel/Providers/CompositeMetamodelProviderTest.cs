@@ -297,11 +297,11 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
 
             nestedProvider1Mock
                 .Setup(x => x.TryGetValueTypeMergingStrategy(It.IsAny<Type>()))
-                .Returns<Type>(t => null);
+                .Returns<Type>(t => ValueTypeMergingStrategy.None);
 
             nestedProvider2Mock
                 .Setup(x => x.TryGetValueTypeMergingStrategy(It.IsAny<Type>()))
-                .Returns<Type>(t => null);
+                .Returns<Type>(t => ValueTypeMergingStrategy.None);
 
             var provider = new CompositeMetamodelProvider();
             IMetamodelProvider metamodelProvider = provider;
@@ -313,7 +313,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
             var serializer = metamodelProvider.TryGetValueTypeMergingStrategy(typeof(TestType));
 
             // Assert
-            Assert.IsNull(serializer);
+            Assert.AreEqual(ValueTypeMergingStrategy.None, serializer);
         }
 
         [TestMethod]
@@ -334,7 +334,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
                     ++counter;
                     mock1Order = counter;
 
-                    return null;
+                    return ValueTypeMergingStrategy.None;
                 });
 
             nestedProvider2Mock
@@ -344,7 +344,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
                     ++counter;
                     mock2Order = counter;
 
-                    return null;
+                    return ValueTypeMergingStrategy.None;
                 });
 
             var provider = new CompositeMetamodelProvider();
@@ -374,7 +374,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
 
             nestedProvider1Mock
                 .Setup(x => x.TryGetValueTypeMergingStrategy(It.IsAny<Type>()))
-                .Returns<Type>(t => null);
+                .Returns<Type>(t => ValueTypeMergingStrategy.None);
 
             nestedProvider2Mock
                 .Setup(x => x.TryGetValueTypeMergingStrategy(It.IsAny<Type>()))

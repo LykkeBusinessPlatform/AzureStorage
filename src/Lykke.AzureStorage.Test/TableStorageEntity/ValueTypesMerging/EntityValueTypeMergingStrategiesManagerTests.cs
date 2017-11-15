@@ -37,7 +37,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.ValueTypesMerging
                 throw new InvalidOperationException();
             }
 
-            public ValueTypeMergingStrategy? TryGetValueTypeMergingStrategy(Type type)
+            public ValueTypeMergingStrategy TryGetValueTypeMergingStrategy(Type type)
             {
                 _getStrategyCalledTimes.TryGetValue(type, out var times);
                 _getStrategyCalledTimes[type] = ++times;
@@ -48,7 +48,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.ValueTypesMerging
                 }
                 if (type == TestEntityWithoutValueTypeMergingStrategyType)
                 {
-                    return null;
+                    return ValueTypeMergingStrategy.None;
                 }
 
                 throw new InvalidOperationException("Unknown entity type");

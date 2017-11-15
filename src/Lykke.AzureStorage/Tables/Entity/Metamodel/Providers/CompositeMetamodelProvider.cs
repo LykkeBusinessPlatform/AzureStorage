@@ -53,11 +53,11 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
                 .FirstOrDefault(serializer => serializer != null);
         }
 
-        ValueTypeMergingStrategy? IMetamodelProvider.TryGetValueTypeMergingStrategy(Type type)
+        ValueTypeMergingStrategy IMetamodelProvider.TryGetValueTypeMergingStrategy(Type type)
         {
             return _builders
                 .Select(builder => builder.TryGetValueTypeMergingStrategy(type))
-                .FirstOrDefault(strategy => strategy != null);
+                .FirstOrDefault(strategy => strategy != ValueTypeMergingStrategy.None);
         }
     }
 }

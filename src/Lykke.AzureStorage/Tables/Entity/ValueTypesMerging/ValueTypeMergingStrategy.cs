@@ -9,6 +9,11 @@ namespace Lykke.AzureStorage.Tables.Entity.ValueTypesMerging
     public enum ValueTypeMergingStrategy
     {
         /// <summary>
+        /// Represents no actual strategy
+        /// </summary>
+        None,
+
+        /// <summary>
         /// Default strategy. Forbids merging of entities with value type properties
         /// </summary>
         /// <remarks>

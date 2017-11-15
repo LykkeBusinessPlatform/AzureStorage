@@ -11,6 +11,6 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel
     internal interface IEntityMetamodel
     {
         IStorageValueSerializer TryGetSerializer(PropertyInfo property);
-        ValueTypeMergingStrategy? TryGetValueTypeMergingStrategy(Type type);
+        ValueTypeMergingStrategy TryGetValueTypeMergingStrategy(Type type);
     }
 }

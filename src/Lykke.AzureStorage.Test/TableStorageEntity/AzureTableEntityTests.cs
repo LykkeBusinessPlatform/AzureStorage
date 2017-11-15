@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
@@ -128,6 +129,16 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
         #endregion
 
 
+        [TestInitialize]
+        public void InitializeTest()
+        {
+            // Default configuration
+            EntityValueTypeMergingStrategiesManager.Configure(
+                EntityMetamodelImpl.Empty,
+                new ValueTypeMergingStrategiesFactory());
+        }
+
+
         #region Creating
 
         [TestMethod]
@@ -254,13 +265,17 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
             var storageProperties = itableEntity.WriteEntity(new OperationContext());
 
             // Assert
-            Assert.AreEqual(3, storageProperties.Count);
+            Assert.AreEqual(4, storageProperties.Count);
             Assert.IsTrue(storageProperties.ContainsKey(nameof(TestEntity.StringProperty)));
             Assert.IsTrue(storageProperties.ContainsKey(nameof(TestEntity.MissedInStorageProperty)));
             Assert.IsTrue(storageProperties.ContainsKey(nameof(TestEntity.OneMoreProperty)));
+            Assert.IsTrue(storageProperties.ContainsKey(nameof(TestEntity.ValueTypeProperty)));
             Assert.AreEqual(entity.StringProperty, storageProperties[nameof(TestEntity.StringProperty)].PropertyAsObject);
             Assert.AreEqual(default(int), storageProperties[nameof(TestEntity.MissedInStorageProperty)].PropertyAsObject);
             Assert.IsNull(storageProperties[nameof(TestEntity.OneMoreProperty)].PropertyAsObject);
+            Assert.AreEqual(
+                TypeDescriptor.GetConverter(typeof(decimal)).ConvertToInvariantString(default(decimal)), 
+                storageProperties[nameof(TestEntity.ValueTypeProperty)].PropertyAsObject);
         }
 
         [TestMethod]

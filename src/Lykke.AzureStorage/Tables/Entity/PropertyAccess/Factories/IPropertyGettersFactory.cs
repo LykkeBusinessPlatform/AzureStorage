@@ -5,6 +5,6 @@ namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories
 {
     internal interface IPropertyGettersFactory
     {
-        Func<object, object> Create(PropertyInfo property);
+        Func<AzureTableEntity, object> Create(PropertyInfo property);
     }
 }

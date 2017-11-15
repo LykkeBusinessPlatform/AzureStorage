@@ -43,7 +43,11 @@ namespace Lykke.AzureStorage.Tables.Entity.ValueTypesMerging
                     throw new InvalidOperationException($"Type {type} should be descendant of the {nameof(AzureTableEntity)}");
                 }
 
-                return _metamodel.TryGetValueTypeMergingStrategy(type) ?? ValueTypeMergingStrategy.Forbid;
+                var metamodelStrategy = _metamodel.TryGetValueTypeMergingStrategy(type);
+
+                return metamodelStrategy == ValueTypeMergingStrategy.None
+                    ? ValueTypeMergingStrategy.Forbid
+                    : metamodelStrategy;
             });
 
             return _strategiesesFactory.Create(strategyType);

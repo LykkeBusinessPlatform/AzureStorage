@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,7 +13,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.PropertyAccess.Factories
         {
         }
 
-        private class TestEntity
+        private class TestEntity : AzureTableEntity
         {
             [UsedImplicitly]
             public int ValueTypeProperty { get; set; }

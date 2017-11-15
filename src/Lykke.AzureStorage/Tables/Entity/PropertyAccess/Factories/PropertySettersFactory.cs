@@ -6,9 +6,9 @@ namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories
 {
     internal class PropertySettersFactory : IPropertySettersFactory
     {
-        public Action<object, object> Create(PropertyInfo property)
+        public Action<AzureTableEntity, object> Create(PropertyInfo property)
         {
-            var self = Expression.Parameter(typeof(object), "this");
+            var self = Expression.Parameter(typeof(AzureTableEntity), "this");
             var theValue = Expression.Parameter(typeof(object), "value");
             var isValueType = property.PropertyType.IsValueType;
 
@@ -37,7 +37,7 @@ namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories
             var block = Expression.Block(new[] { body, Expression.Empty() });
             var lambda = Expression.Lambda(block, self, theValue);
 
-            return (Action<object, object>)lambda.Compile();
+            return (Action<AzureTableEntity, object>)lambda.Compile();
         }
     }
 }

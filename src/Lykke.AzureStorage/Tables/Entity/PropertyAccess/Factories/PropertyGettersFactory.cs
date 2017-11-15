@@ -6,16 +6,16 @@ namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories
 {
     internal class PropertyGettersFactory : IPropertyGettersFactory
     {
-        public Func<object, object> Create(PropertyInfo property)
+        public Func<AzureTableEntity, object> Create(PropertyInfo property)
         {
-            var self = Expression.Parameter(typeof(object), "this");
+            var self = Expression.Parameter(typeof(AzureTableEntity), "this");
             var propertyExpression = Expression.Property(Expression.Convert(self, property.ReflectedType), property);
 
             Expression castExpression = Expression.Convert(propertyExpression, typeof(object));
 
             var lambda = Expression.Lambda(castExpression, self);
 
-            return (Func<object, object>)lambda.Compile();
+            return (Func<AzureTableEntity, object>)lambda.Compile();
         }
     }
 }

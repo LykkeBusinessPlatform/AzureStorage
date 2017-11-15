@@ -214,7 +214,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
             var strategy = metamodelProvider.TryGetValueTypeMergingStrategy(typeof(TestType));
 
             // Assert
-            Assert.IsNull(strategy);
+            Assert.AreEqual(ValueTypeMergingStrategy.None, strategy);
         }
 
         [TestMethod]

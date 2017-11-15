@@ -15,7 +15,8 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.ValueTypesMerging.Factories
             // Arrange
             var allStrategyTypes = Enum
                 .GetValues(typeof(ValueTypeMergingStrategy))
-                .Cast<ValueTypeMergingStrategy>();
+                .Cast<ValueTypeMergingStrategy>()
+                .Where(v => v != ValueTypeMergingStrategy.None);
             var factory = new ValueTypeMergingStrategiesFactory();
 
             // Act

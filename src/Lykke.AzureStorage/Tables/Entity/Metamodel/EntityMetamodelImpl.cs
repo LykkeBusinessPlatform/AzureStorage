@@ -37,7 +37,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel
             }
         }
 
-        public ValueTypeMergingStrategy? TryGetValueTypeMergingStrategy(Type type)
+        public ValueTypeMergingStrategy TryGetValueTypeMergingStrategy(Type type)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel
         private IStorageValueSerializer TryGetCollectionSerializer(Type collectionType)
         {
             var enumerbleGenericArguments = GetGenericArgumentsOfAssignableType(collectionType, typeof(IEnumerable<>));
-            if (enumerbleGenericArguments != null)
+            if (enumerbleGenericArguments.Any())
             {
                 var elementType = enumerbleGenericArguments.First();
 
@@ -72,7 +72,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel
         private IStorageValueSerializer TryGetNullableSerializer(Type nullableType)
         {
             var nullableGenericArguments = GetGenericArgumentsOfAssignableType(nullableType, typeof(Nullable<>));
-            if (nullableGenericArguments != null)
+            if (nullableGenericArguments.Any())
             {
                 var elementType = nullableGenericArguments.First();
 
@@ -87,30 +87,33 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel
         /// if <paramref name="givenType"/> is assignable to the <paramref name="genericType"/>,
         /// or null
         /// </summary>
-        private static Type[] GetGenericArgumentsOfAssignableType(Type givenType, Type genericType)
+        private static IReadOnlyList<Type> GetGenericArgumentsOfAssignableType(Type givenType, Type genericType)
         {
-            if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
+            while (true)
             {
-                return givenType.GenericTypeArguments;
-            }
-
-            var interfaceTypes = givenType.GetInterfaces();
-
-            foreach (var it in interfaceTypes)
-            {
-                if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
+                if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
                 {
-                    return it.GetGenericArguments();
+                    return givenType.GenericTypeArguments;
                 }
-            }
 
-            var baseType = givenType.BaseType;
-            if (baseType == null)
-            {
-                return null;
-            }
+                var interfaceTypes = givenType.GetInterfaces();
 
-            return GetGenericArgumentsOfAssignableType(baseType, genericType);
+                foreach (var it in interfaceTypes)
+                {
+                    if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
+                    {
+                        return it.GetGenericArguments();
+                    }
+                }
+
+                var baseType = givenType.BaseType;
+                if (baseType == null)
+                {
+                    return Array.Empty<Type>();
+                }
+
+                givenType = baseType;
+            }
         }
     }
 }
