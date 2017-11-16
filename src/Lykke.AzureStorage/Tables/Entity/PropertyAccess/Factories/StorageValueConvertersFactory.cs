@@ -7,7 +7,7 @@ using Lykke.AzureStorage.Tables.Entity.Converters;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
 
-namespace Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation
+namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories
 {
     internal class StorageValueConvertersFactory : IStorageValueConvertersFactory
     {
@@ -31,11 +31,18 @@ namespace Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation
             typeof(long?)
         };
 
-        private readonly IEntityMetamodel _metamodel;
+        private static readonly PassThroughStorageValueConverter PassThroughStorageValueConverter;
         
+        private readonly IEntityMetamodel _metamodel;
+
         public StorageValueConvertersFactory(IEntityMetamodel metamodel)
         {
             _metamodel = metamodel;
+        }
+
+        static StorageValueConvertersFactory()
+        {
+            PassThroughStorageValueConverter = new PassThroughStorageValueConverter();
         }
 
         public IStorageValueConverter Create(PropertyInfo property)
@@ -45,7 +52,7 @@ namespace Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation
             // If type is known for Azure use PassThroughtConverter
             if (TypesWhichAzureKnows.Contains(propertyType))
             {
-                return new PassThroughStorageValueConverter();
+                return PassThroughStorageValueConverter;
             }
 
             // If serializer is assigned in metamodel, use SerializerConverter

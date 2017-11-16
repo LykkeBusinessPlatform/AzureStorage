@@ -284,7 +284,7 @@ namespace AzureStorage.Tables
         {
             var table = await GetTableAsync();
 
-            await table.ExecuteAsync(TableOperation.InsertOrMerge(item), GetRequestOptions(), null);
+            await table.ExecuteAsync(TableOperation.InsertOrMerge(item), GetRequestOptions(), GetMergeOperationContext());
         }
 
         public async Task InsertOrMergeBatchAsync(IEnumerable<T> items)
@@ -299,7 +299,7 @@ namespace AzureStorage.Tables
                     insertBatchOperation.InsertOrMerge(item);
                 }
                 var table = await GetTableAsync();
-                await table.ExecuteLimitSafeBatchAsync(insertBatchOperation, GetRequestOptions(), null);
+                await table.ExecuteLimitSafeBatchAsync(insertBatchOperation, GetRequestOptions(), GetMergeOperationContext());
             }
         }
 
@@ -347,7 +347,7 @@ namespace AzureStorage.Tables
                         if (result != null)
                         {
                             var table = await GetTableAsync();
-                            await table.ExecuteAsync(TableOperation.Merge(result), GetRequestOptions(), null);
+                            await table.ExecuteAsync(TableOperation.Merge(result), GetRequestOptions(), GetMergeOperationContext());
                         }
 
                         return result;
@@ -743,6 +743,17 @@ namespace AzureStorage.Tables
 
                 return true;
             });
+        }
+
+        private static OperationContext GetMergeOperationContext()
+        {
+            return new OperationContext
+            {
+                UserHeaders = new Dictionary<string, string>
+                {
+                    {AzureTableEntity.MergingOperationContextHeader, string.Empty}
+                }
+            };
         }
 
         private CloudTable GetTableReference()

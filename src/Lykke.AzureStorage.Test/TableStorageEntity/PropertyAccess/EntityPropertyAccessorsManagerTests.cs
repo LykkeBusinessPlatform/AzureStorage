@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Lykke.AzureStorage.Tables;
-using Lykke.AzureStorage.Tables.Entity;
 using Lykke.AzureStorage.Tables.Entity.Converters;
-using Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation;
+using Lykke.AzureStorage.Tables.Entity.PropertyAccess;
+using Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace Lykke.AzureStorage.Test.TableStorageEntity
+namespace Lykke.AzureStorage.Test.TableStorageEntity.PropertyAccess
 {
     [TestClass]
     public class EntityPropertyAccessorsManagerTests
@@ -59,7 +59,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
         private static readonly Type DescendantTestEntityType = typeof(DescendantTestEntity);
 
         [TestMethod]
-        public void Test_that_property_accessors_is_cached()
+        public void Test_that_property_accessors_are_cached()
         {
             // Arrange
             var createCalledTimes = new Dictionary<PropertyInfo, int>();
@@ -87,7 +87,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
             // Arrange
             var propertyAccessorsFactory = new PropertyAccessorsFactoryMock(p =>
             {
-                return new EntityPropertyAccessor(p.Name, e => null, (e, v) => { }, new PassThroughStorageValueConverter());
+                return new EntityPropertyAccessor(p.Name, false, e => null, (e, v) => { }, new PassThroughStorageValueConverter());
             });
             var manager = new EntityPropertyAccessorsManager(propertyAccessorsFactory);
 
@@ -106,7 +106,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
             // Arrange
             var propertyAccessorsFactory = new PropertyAccessorsFactoryMock(p =>
             {
-                return new EntityPropertyAccessor(p.Name, e => null, (e, v) => { }, new PassThroughStorageValueConverter());
+                return new EntityPropertyAccessor(p.Name, false, e => null, (e, v) => { }, new PassThroughStorageValueConverter());
             });
             var manager = new EntityPropertyAccessorsManager(propertyAccessorsFactory);
 

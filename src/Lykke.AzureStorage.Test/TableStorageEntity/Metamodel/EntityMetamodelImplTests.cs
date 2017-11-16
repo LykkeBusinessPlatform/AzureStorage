@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
@@ -18,12 +19,12 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel
         {
             public string Serialize(object value)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
 
             public object Deserialize(string serialized)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
         }
 
@@ -31,12 +32,12 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel
         {
             public string Serialize(object value)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
 
             public object Deserialize(string serialized)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
         }
 
@@ -44,10 +45,26 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel
         {
         }
 
+        private struct TestStruct
+        {
+        }
+
         private class CompositeTestType
         {
             [UsedImplicitly]
             public TestType ComplexProperty { get; set; }
+
+            [UsedImplicitly]
+            public TestType[] ComplexPropertyArray { get; set; }
+
+            [UsedImplicitly]
+            public IEnumerable<TestType> ComplexPropertyEnumerable{ get; set; }
+
+            [UsedImplicitly]
+            public IList<TestType> ComplexPropertyList{ get; set; }
+
+            [UsedImplicitly]
+            public TestStruct? NullableStructProperty { get; set; } 
         }
 
         #endregion
@@ -129,6 +146,98 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel
             // Assert
             Assert.IsNotNull(serializer);
             Assert.IsInstanceOfType(serializer, typeof(AnotherValueSerializerMock));
+        }
+
+        [TestMethod]
+        public void Test_that_type_serializer_is_propogated_to_the_arrays()
+        {
+            // Arrange
+            var type = typeof(TestType);
+            var property = typeof(CompositeTestType).GetProperty(nameof(CompositeTestType.ComplexPropertyArray));
+
+            var providerMock = new Mock<IMetamodelProvider>();
+            
+            providerMock
+                .Setup(x => x.TryGetTypeSerializer(It.Is<Type>(t => t == type)))
+                .Returns<Type>(p => new ValueSerializerMock());
+
+            var metamodelImpl = new EntityMetamodelImpl(providerMock.Object);
+
+            // Act
+            var serializer = metamodelImpl.TryGetSerializer(property);
+
+            // Assert
+            Assert.IsNotNull(serializer);
+            Assert.IsInstanceOfType(serializer, typeof(ValueSerializerMock));
+        }
+
+        [TestMethod]
+        public void Test_that_type_serializer_is_propogated_to_the_enumerables()
+        {
+            // Arrange
+            var type = typeof(TestType);
+            var property = typeof(CompositeTestType).GetProperty(nameof(CompositeTestType.ComplexPropertyEnumerable));
+
+            var providerMock = new Mock<IMetamodelProvider>();
+
+            providerMock
+                .Setup(x => x.TryGetTypeSerializer(It.Is<Type>(t => t == type)))
+                .Returns<Type>(p => new ValueSerializerMock());
+
+            var metamodelImpl = new EntityMetamodelImpl(providerMock.Object);
+
+            // Act
+            var serializer = metamodelImpl.TryGetSerializer(property);
+
+            // Assert
+            Assert.IsNotNull(serializer);
+            Assert.IsInstanceOfType(serializer, typeof(ValueSerializerMock));
+        }
+
+        [TestMethod]
+        public void Test_that_type_serializer_is_propogated_to_the_lists()
+        {
+            // Arrange
+            var type = typeof(TestType);
+            var property = typeof(CompositeTestType).GetProperty(nameof(CompositeTestType.ComplexPropertyList));
+
+            var providerMock = new Mock<IMetamodelProvider>();
+
+            providerMock
+                .Setup(x => x.TryGetTypeSerializer(It.Is<Type>(t => t == type)))
+                .Returns<Type>(p => new ValueSerializerMock());
+
+            var metamodelImpl = new EntityMetamodelImpl(providerMock.Object);
+
+            // Act
+            var serializer = metamodelImpl.TryGetSerializer(property);
+
+            // Assert
+            Assert.IsNotNull(serializer);
+            Assert.IsInstanceOfType(serializer, typeof(ValueSerializerMock));
+        }
+
+        [TestMethod]
+        public void Test_that_structure_serializer_is_propogated_to_the_nullable()
+        {
+            // Arrange
+            var type = typeof(TestStruct);
+            var property = typeof(CompositeTestType).GetProperty(nameof(CompositeTestType.NullableStructProperty));
+
+            var providerMock = new Mock<IMetamodelProvider>();
+
+            providerMock
+                .Setup(x => x.TryGetTypeSerializer(It.Is<Type>(t => t == type)))
+                .Returns<Type>(p => new ValueSerializerMock());
+
+            var metamodelImpl = new EntityMetamodelImpl(providerMock.Object);
+
+            // Act
+            var serializer = metamodelImpl.TryGetSerializer(property);
+
+            // Assert
+            Assert.IsNotNull(serializer);
+            Assert.IsInstanceOfType(serializer, typeof(ValueSerializerMock));
         }
     }
 }

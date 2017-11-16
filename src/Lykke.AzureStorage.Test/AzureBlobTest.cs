@@ -24,7 +24,7 @@ namespace Lykke.AzureStorage.Test
         [TestCleanup]
         public async Task TestClean()
         {
-            var items = await _testBlob.GetListOfBlobKeysAsync(_blobContainer);
+            var items = (await _testBlob.GetListOfBlobKeysAsync(_blobContainer)).ToArray();
             foreach (var item in items)
             {
                 await _testBlob.DelBlobAsync(_blobContainer, item);
@@ -52,11 +52,9 @@ namespace Lykke.AzureStorage.Test
         [TestMethod]
         public async Task AzureBlob_CheckParallelInsert()
         {
-            IBlobStorage blob = new AzureBlobInMemory();
-
             Parallel.For(1, 11, i =>
             {
-                blob.SaveBlobAsync(_blobContainer, Guid.NewGuid().ToString(), new MemoryStream(new[] { (byte)i })).Wait();
+                _testBlob.SaveBlobAsync(_blobContainer, Guid.NewGuid().ToString(), new MemoryStream(new[] { (byte)i })).Wait();
             });
 
             var items = await _testBlob.GetListOfBlobsAsync(_blobContainer);

@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
-using Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation;
+using Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace Lykke.AzureStorage.Tables.Entity
+namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess
 {
     internal class EntityPropertyAccessorsManager : IEntityPropertyAccessorsManager
     {

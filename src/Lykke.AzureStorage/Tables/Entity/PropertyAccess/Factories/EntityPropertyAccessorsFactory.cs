@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation
+namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories
 {
     internal class EntityPropertyAccessorsFactory : IEntityPropertyAccessorsFactory
     {
@@ -24,7 +24,7 @@ namespace Lykke.AzureStorage.Tables.Entity.PropertyAccessorCreation
             var setter = _settersFactory.Create(property);
             var converter = _convertersFactory.Create(property);
 
-            return new EntityPropertyAccessor(property.Name, getter, setter, converter);
+            return new EntityPropertyAccessor(property.Name, property.PropertyType.IsValueType, getter, setter, converter);
         }
     }
 }

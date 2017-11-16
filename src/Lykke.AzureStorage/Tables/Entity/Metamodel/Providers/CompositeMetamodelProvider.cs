@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
+using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 
 namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
 {
@@ -13,14 +14,14 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
     [PublicAPI]
     public class CompositeMetamodelProvider : IMetamodelProvider
     {
-        private readonly List<IMetamodelProvider> _builders;
+        private ImmutableList<IMetamodelProvider> _builders;
 
         /// <summary>
         /// Metamodel provider, which provides metamodel composed from other metamodel providers 
         /// </summary>
         public CompositeMetamodelProvider()
         {
-            _builders = new List<IMetamodelProvider>();
+            _builders = ImmutableList.Create<IMetamodelProvider>();
         }
 
         /// <summary>
@@ -33,7 +34,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
                 throw new ArgumentNullException(nameof(provider));
             }
 
-            _builders.Add(provider);
+            _builders = _builders.Add(provider);
 
             return this;
         }
@@ -50,6 +51,13 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
             return _builders
                 .Select(builder => builder.TryGetPropertySerializer(propertyInfo))
                 .FirstOrDefault(serializer => serializer != null);
+        }
+
+        ValueTypeMergingStrategy IMetamodelProvider.TryGetValueTypeMergingStrategy(Type type)
+        {
+            return _builders
+                .Select(builder => builder.TryGetValueTypeMergingStrategy(type))
+                .FirstOrDefault(strategy => strategy != ValueTypeMergingStrategy.None);
         }
     }
 }

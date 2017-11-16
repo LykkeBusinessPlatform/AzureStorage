@@ -1,11 +1,11 @@
 ﻿using System;
 using Lykke.AzureStorage.Tables;
-using Lykke.AzureStorage.Tables.Entity;
 using Lykke.AzureStorage.Tables.Entity.Converters;
+using Lykke.AzureStorage.Tables.Entity.PropertyAccess;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace Lykke.AzureStorage.Test.TableStorageEntity
+namespace Lykke.AzureStorage.Test.TableStorageEntity.PropertyAccess
 {
     [TestClass]
     public class EntityPropertyAccessorTests
@@ -51,6 +51,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
                 v => v);
             var accessor = new EntityPropertyAccessor(
                 nameof(TestEntity.Property),
+                false,
                 e => null,
                 (e, v) => ((TestEntity)e).Property = (string)v,
                 converter);
@@ -82,6 +83,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
                 v => v);
             var accessor = new EntityPropertyAccessor(
                 nameof(TestEntity.Property),
+                false,
                 e => null,
                 (e, v) => ((TestEntity)e).Property = (string)v,
                 converter);
@@ -111,6 +113,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
                 });
             var accessor = new EntityPropertyAccessor(
                 nameof(TestEntity.Property),
+                false,
                 e => ((TestEntity)e).Property,
                 (e, v) => ((TestEntity)e).Property = (string)v,
                 converter);
@@ -143,6 +146,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
                 });
             var accessor = new EntityPropertyAccessor(
                 nameof(TestEntity.Property),
+                false,
                 e => ((TestEntity)e).Property,
                 (e, v) => ((TestEntity)e).Property = (string)v,
                 converter);
