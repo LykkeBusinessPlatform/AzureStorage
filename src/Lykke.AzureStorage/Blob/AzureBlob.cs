@@ -981,8 +981,14 @@ namespace AzureStorage.Blob
 
                 return mimeType;
             }
+            else
+            {
+                // is entire key - extension?
 
-            return null;
+                ContentTypes.TryGetValue($".{key}", out var mimeType);
+
+                return mimeType;
+            }
         }
     }
 }
