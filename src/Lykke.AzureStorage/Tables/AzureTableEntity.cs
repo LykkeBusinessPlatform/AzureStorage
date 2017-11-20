@@ -29,10 +29,10 @@ namespace Lykke.AzureStorage.Tables
     {
         internal const string MergingOperationContextHeader = "_AzureTableEntity.MergingOperation";
 
-        string ITableEntity.PartitionKey { get; set; }
-        string ITableEntity.RowKey { get; set; }
-        DateTimeOffset ITableEntity.Timestamp { get; set; }
-        string ITableEntity.ETag { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
+        public string ETag { get; set; }
 
         private IValueTypeMergingStrategy _valueTypeMergingStrategy;
 
