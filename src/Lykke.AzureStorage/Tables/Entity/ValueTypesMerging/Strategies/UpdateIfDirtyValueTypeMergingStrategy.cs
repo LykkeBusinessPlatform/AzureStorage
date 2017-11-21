@@ -6,6 +6,8 @@ namespace Lykke.AzureStorage.Tables.Entity.ValueTypesMerging.Strategies
 {
     internal class UpdateIfDirtyValueTypeMergingStrategy : IValueTypeMergingStrategy
     {
+        private static readonly EntityProperty NullProperty = EntityProperty.CreateEntityPropertyFromObject(null);
+
         // ConcurrentDictionary is recommended by MS as the HashSet substitution, when thread safe is required
         private readonly ConcurrentDictionary<string, byte> _dirtyProperties;
 
@@ -52,7 +54,7 @@ namespace Lykke.AzureStorage.Tables.Entity.ValueTypesMerging.Strategies
 
             // Property wasn't changed, so preserve storage value
 
-            return null;
+            return NullProperty;
         }
     }
 }
