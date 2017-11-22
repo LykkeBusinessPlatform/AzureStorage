@@ -39,7 +39,8 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.ValueTypesMerging.Strategie
             var entityProperty = _strategy.GetEntityProperty(_entity, entityPropertyAccessor, isMergingOperation: true);
 
             // Assert
-            Assert.IsNull(entityProperty);
+            Assert.IsNotNull(entityProperty);
+            Assert.IsNull(entityProperty.PropertyAsObject);
             Assert.IsNotNull(originalEntityProperty);
         }
 
