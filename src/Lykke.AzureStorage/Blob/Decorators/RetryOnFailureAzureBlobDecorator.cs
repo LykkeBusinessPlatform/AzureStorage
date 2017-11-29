@@ -58,7 +58,8 @@ namespace AzureStorage.Blob.Decorators
                     var noRetryStatusCodes = new[]
                     {
                         HttpStatusCode.Conflict,
-                        HttpStatusCode.BadRequest
+                        HttpStatusCode.BadRequest,
+                        HttpStatusCode.PreconditionFailed
                     };
 
                     return storageException != null && noRetryStatusCodes.Contains((HttpStatusCode)storageException.RequestInformation.HttpStatusCode)
