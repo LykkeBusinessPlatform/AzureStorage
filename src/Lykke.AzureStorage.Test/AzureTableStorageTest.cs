@@ -4,6 +4,8 @@ using AzureStorage.Tables;
 using Microsoft.WindowsAzure.Storage.Table;
 using System.Threading.Tasks;
 using AzureStorage;
+using Common.Log;
+using Lykke.AzureStorage.Test.Mocks;
 
 namespace Lykke.AzureStorage.Test
 {
@@ -83,6 +85,41 @@ namespace Lykke.AzureStorage.Test
             var createdEntity = await storage1.GetDataAsync(testEntity.PartitionKey, testEntity.RowKey);
 
             Assert.IsNotNull(createdEntity);
+        }
+
+        [TestMethod]
+        public void Test_that_invalid_table_name_throws()
+        {
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "_asd",
+                    new LogToMemory()));
+
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "1asd",
+                    new LogToMemory()));
+
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "a_sd",
+                    new LogToMemory()));
+
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "a-sd",
+                    new LogToMemory()));
+
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "as",
+                    new LogToMemory()));
+
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), new string('a', 64), 
+                    new LogToMemory()));
+        }
+
+        [TestMethod]
+        public void Test_that_valid_table_name_doesnt_throw()
+        {
+            AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "a1S", new LogToMemory());
+            AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), new string('a', 63), new LogToMemory());
         }
     }
 }

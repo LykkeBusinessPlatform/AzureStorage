@@ -91,8 +91,8 @@ namespace AzureStorage.Tables
 
         private readonly CloudStorageAccount _cloudStorageAccount;
         private bool _tableCreated;
-
-        private AzureTableStorage(string connectionString, string tableName, TimeSpan? maxExecutionTimeout = null) 
+        
+        private AzureTableStorage(string connectionString, string tableName, TimeSpan? maxExecutionTimeout = null)
         {
             _tableName = tableName;
             _cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
@@ -128,6 +128,8 @@ namespace AzureStorage.Tables
             int onGettingRetryCount = 10,
             TimeSpan? retryDelay = null)
         {
+            AzureTableStorageTableNameChecker.ThrowIfInvalid(tableName);
+
             async Task<INoSQLTableStorage<T>> MakeStorage() 
                 => new AzureTableStorage<T>(await connectionStringManager.Reload(), tableName, maxExecutionTimeout);
 
@@ -169,6 +171,8 @@ namespace AzureStorage.Tables
             int onGettingRetryCount = 10,
             TimeSpan? retryDelay = null)
         {
+            AzureTableStorageTableNameChecker.ThrowIfInvalid(tableName);
+
             async Task<INoSQLTableStorage<T>> MakeStorage() 
                 => new AzureTableStorage<T>(await connectionStringManager.Reload(), tableName, maxExecutionTimeout);
 
