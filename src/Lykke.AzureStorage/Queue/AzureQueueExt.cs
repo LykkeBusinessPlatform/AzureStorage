@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using AzureStorage.Queue.Decorators;
-
+using JetBrains.Annotations;
 using Lykke.SettingsReader;
 
 using Microsoft.WindowsAzure.Storage;
@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 
 namespace AzureStorage.Queue
 {
+    [PublicAPI]
     public class AzureQueueExt : IQueueExt
     {
         private readonly Dictionary<string, Type> _types = new Dictionary<string, Type>();
@@ -22,21 +23,22 @@ namespace AzureStorage.Queue
         private bool _queueCreated;
         private readonly TimeSpan _maxExecutionTime;
 
-        [Obsolete("Have to use the Azure Table Storage.Create method to reloading ConnectionString on access failure.", false)]
-        public AzureQueueExt(string conectionString, string queueName, TimeSpan? maxExecutionTimeout = null)
+        private AzureQueueExt(string conectionString, string queueName, TimeSpan? maxExecutionTimeout = null)
         {
-            queueName = queueName.ToLower();
             _storageAccount = CloudStorageAccount.Parse(conectionString);
             _queueName = queueName;
+            
             _maxExecutionTime = maxExecutionTimeout.GetValueOrDefault(TimeSpan.FromSeconds(30));
         }
 
         public static IQueueExt Create(IReloadingManager<string> connectionStringManager, string queueName, TimeSpan? maxExecutionTimeout = null)
         {
+            queueName = queueName.ToLower();
+
+            NameValidator.ValidateQueueName(queueName);
+
             return new ReloadingConnectionStringOnFailureAzureQueueDecorator(
-#pragma warning disable 618
                 async () => new AzureQueueExt(await connectionStringManager.Reload(), queueName, maxExecutionTimeout)
-#pragma warning restore 618
             );
         }
 
@@ -92,16 +94,14 @@ namespace AzureStorage.Queue
 
         public async Task FinishMessageAsync(QueueData token)
         {
-            var cloudQueueMessage = token.Token as CloudQueueMessage;
-            if (cloudQueueMessage == null)
-                return;
+            if (token.Token is CloudQueueMessage cloudQueueMessage)
+            {
+                var queue = await GetQueue();
 
-            var queue = await GetQueue();
-
-            await queue.DeleteMessageAsync(cloudQueueMessage, GetRequestOptions(), null);
+                await queue.DeleteMessageAsync(cloudQueueMessage, GetRequestOptions(), null);
+            }
         }
-
-
+        
         public async Task<string> PutMessageAsync(object itm)
         {
             var msg = SerializeObject(itm);
@@ -179,7 +179,7 @@ namespace AzureStorage.Queue
                 if (!_types.ContainsKey(typeStr))
                     return null;
 
-                var data = itm.Substring(i + 1, itm.Count() - i - 1);
+                var data = itm.Substring(i + 1, itm.Length - i - 1);
 
                 return JsonConvert.DeserializeObject(data, _types[typeStr]);
             }

@@ -9,7 +9,7 @@ using AzureStorage.Tables.Decorators;
 using Common;
 using Common.Extensions;
 using Common.Log;
-
+using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Paging;
 using Lykke.SettingsReader;
@@ -19,6 +19,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureStorage.Tables
 {
+    [PublicAPI]
     public class AzureTableStorage<T> : INoSQLTableStorage<T> where T : class, ITableEntity, new()
     {
         private class AzurePagingInfo : PagingInfo
@@ -128,7 +129,7 @@ namespace AzureStorage.Tables
             int onGettingRetryCount = 10,
             TimeSpan? retryDelay = null)
         {
-            AzureTableStorageTableNameChecker.ThrowIfInvalid(tableName);
+            NameValidator.ValidateTableName(tableName);
 
             async Task<INoSQLTableStorage<T>> MakeStorage() 
                 => new AzureTableStorage<T>(await connectionStringManager.Reload(), tableName, maxExecutionTimeout);
@@ -171,7 +172,7 @@ namespace AzureStorage.Tables
             int onGettingRetryCount = 10,
             TimeSpan? retryDelay = null)
         {
-            AzureTableStorageTableNameChecker.ThrowIfInvalid(tableName);
+            NameValidator.ValidateTableName(tableName);
 
             async Task<INoSQLTableStorage<T>> MakeStorage() 
                 => new AzureTableStorage<T>(await connectionStringManager.Reload(), tableName, maxExecutionTimeout);
