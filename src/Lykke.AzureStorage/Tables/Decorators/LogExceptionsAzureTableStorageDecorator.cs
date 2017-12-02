@@ -187,10 +187,11 @@ namespace AzureStorage.Tables.Decorators
         public Task DoBatchAsync(TableBatchOperation batch) 
             => WrapAsync(() => _impl.DoBatchAsync(batch), nameof(DoBatchAsync));
 
-        public Task<IPagedResult<TEntity>> ExecuteQueryWithPaginationAsync(TableQuery<TEntity> query,
-            PagingInfo pagingInfo)
-            => WrapAsync(() => _impl.ExecuteQueryWithPaginationAsync(query, pagingInfo),
-                nameof(ExecuteQueryWithPaginationAsync));
+        public Task<IPagedResult<TEntity>> ExecuteQueryWithPaginationAsync(TableQuery<TEntity> query, PagingInfo pagingInfo)
+            => WrapAsync(() => _impl.ExecuteQueryWithPaginationAsync(query, pagingInfo), nameof(ExecuteQueryWithPaginationAsync));
+
+        public Task CreateTableIfNotExistsAsync()
+            => WrapAsync(() => _impl.CreateTableIfNotExistsAsync(), nameof(CreateTableIfNotExistsAsync));
 
         #endregion
 

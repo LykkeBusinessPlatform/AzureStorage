@@ -390,6 +390,11 @@ namespace AzureStorage.Tables
             throw new NotImplementedException();
         }
 
+        public Task CreateTableIfNotExistsAsync()
+        {
+            return Task.CompletedTask;
+        }
+
         public T this[string partitionKey, string rowKey]
         {
             get

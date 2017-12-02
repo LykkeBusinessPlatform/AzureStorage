@@ -147,6 +147,11 @@ namespace AzureStorage.Tables
             throw new NotImplementedException();
         }
 
+        public Task CreateTableIfNotExistsAsync()
+        {
+            return Task.CompletedTask;
+        }
+
         T INoSQLTableStorage<T>.this[string partition, string row] => GetDataAsync(partition, row).Result;
 
         IEnumerable<T> INoSQLTableStorage<T>.this[string partition] => GetDataAsync(partition).Result;

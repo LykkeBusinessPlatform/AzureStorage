@@ -89,13 +89,15 @@ namespace AzureStorage.Tables
 
         private readonly TimeSpan _maxExecutionTime;
         private readonly string _tableName;
+        private readonly bool _createTableAutomatically;
 
         private readonly CloudStorageAccount _cloudStorageAccount;
         private bool _tableCreated;
         
-        private AzureTableStorage(string connectionString, string tableName, TimeSpan? maxExecutionTimeout = null)
+        private AzureTableStorage(string connectionString, string tableName, TimeSpan? maxExecutionTimeout = null, bool createTableAutomatically = true)
         {
             _tableName = tableName;
+            _createTableAutomatically = createTableAutomatically;
             _cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
 
             _maxExecutionTime = maxExecutionTimeout.GetValueOrDefault(TimeSpan.FromSeconds(5));
@@ -119,6 +121,7 @@ namespace AzureStorage.Tables
         /// <param name="onModificationRetryCount">Retries count when performs modification operation. Default value is 10</param>
         /// <param name="onGettingRetryCount">Retries count when performs reading operation. Default value is 10</param>
         /// <param name="retryDelay">Delay between retries. Default is 200 milliseconds</param>
+        /// <param name="createTableAutomatically">Creates table automatically when performing an operation or not. Default is true</param>
         /// <returns></returns>
         public static INoSQLTableStorage<T> Create(
             IReloadingManager<string> connectionStringManager,
@@ -127,12 +130,13 @@ namespace AzureStorage.Tables
             TimeSpan? maxExecutionTimeout = null,
             int onModificationRetryCount = 10,
             int onGettingRetryCount = 10,
-            TimeSpan? retryDelay = null)
+            TimeSpan? retryDelay = null,
+            bool createTableAutomatically = true)
         {
             NameValidator.ValidateTableName(tableName);
 
             async Task<INoSQLTableStorage<T>> MakeStorage() 
-                => new AzureTableStorage<T>(await connectionStringManager.Reload(), tableName, maxExecutionTimeout);
+                => new AzureTableStorage<T>(await connectionStringManager.Reload(), tableName, maxExecutionTimeout, createTableAutomatically);
 
             return
                 new LogExceptionsAzureTableStorageDecorator<T>(
@@ -162,6 +166,7 @@ namespace AzureStorage.Tables
         /// <param name="onModificationRetryCount">Retries count when performs modification operation. Default value is 10</param>
         /// <param name="onGettingRetryCount">Retries count when performs reading operation. Default value is 10</param>
         /// <param name="retryDelay">Delay between retries. Default is 200 milliseconds</param>
+        /// <param name="createTableAutomatically">Creates table automatically when performing an operation or not. Default is true</param>
         /// <returns></returns>
         public static INoSQLTableStorage<T> CreateWithCache(
             IReloadingManager<string> connectionStringManager,
@@ -170,7 +175,8 @@ namespace AzureStorage.Tables
             TimeSpan? maxExecutionTimeout = null,
             int onModificationRetryCount = 10,
             int onGettingRetryCount = 10,
-            TimeSpan? retryDelay = null)
+            TimeSpan? retryDelay = null,
+            bool createTableAutomatically = true)
         {
             NameValidator.ValidateTableName(tableName);
 
@@ -750,6 +756,11 @@ namespace AzureStorage.Tables
             });
         }
 
+        public async Task CreateTableIfNotExistsAsync()
+        {
+            await CreateAndGetTableIfNotExistsAsync();
+        }
+
         private static OperationContext GetMergeOperationContext()
         {
             return new OperationContext
@@ -767,7 +778,7 @@ namespace AzureStorage.Tables
             return cloudTableClient.GetTableReference(_tableName);
         }
 
-        private async Task<CloudTable> CreateTableIfNotExists()
+        private async Task<CloudTable> CreateAndGetTableIfNotExistsAsync()
         {
             var table = GetTableReference();
 
@@ -780,7 +791,12 @@ namespace AzureStorage.Tables
 
         private async Task<CloudTable> GetTableAsync()
         {
-            return _tableCreated ? GetTableReference() : await CreateTableIfNotExists();
+            if (_tableCreated || !_createTableAutomatically)
+            {
+                return GetTableReference();
+            }
+
+            return await CreateAndGetTableIfNotExistsAsync();
         }
 
         private async Task ExecuteQueryAsync(TableQuery<T> rangeQuery, Func<T, bool> filter,
