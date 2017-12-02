@@ -253,5 +253,10 @@ namespace AzureStorage
         /// <param name="pagingInfo">Paging information</param>
         /// <returns></returns>
         Task<IPagedResult<T>> ExecuteQueryWithPaginationAsync(TableQuery<T> query, PagingInfo pagingInfo);
+
+        /// <summary>
+        /// Creates the table if it doesn't exist
+        /// </summary>
+        Task CreateTableIfNotExistsAsync();
     }
 }

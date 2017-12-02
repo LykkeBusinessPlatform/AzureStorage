@@ -155,6 +155,11 @@ namespace AzureStorage.Tables.Decorators
         public Task<IPagedResult<T>> ExecuteQueryWithPaginationAsync(TableQuery<T> query,
             PagingInfo pagingInfo) => _table.ExecuteQueryWithPaginationAsync(query, pagingInfo);
 
+        public Task CreateTableIfNotExistsAsync()
+        {
+            return _table.CreateTableIfNotExistsAsync();
+        }
+
         T INoSQLTableStorage<T>.this[string partition, string row] => _cache[partition, row];
 
         IEnumerable<T> INoSQLTableStorage<T>.this[string partition] => _cache[partition];

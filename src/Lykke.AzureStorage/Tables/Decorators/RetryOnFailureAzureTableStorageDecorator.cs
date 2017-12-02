@@ -288,5 +288,10 @@ namespace AzureStorage.Tables.Decorators
         {
             return _impl.ExecuteQueryWithPaginationAsync(query, pagingInfo);
         }
+
+        public Task CreateTableIfNotExistsAsync()
+        {
+            return _impl.CreateTableIfNotExistsAsync();
+        }
     }   
 }
