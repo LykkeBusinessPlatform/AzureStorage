@@ -4,13 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage.Blob.Decorators;
-using Common.Extensions;
+using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace AzureStorage.Blob
 {
+    [PublicAPI]
     public class AzureBlobStorage : IBlobStorage
     {
         private static readonly IReadOnlyDictionary<string, string> ContentTypes = new Dictionary<string, string>
@@ -735,6 +736,8 @@ namespace AzureStorage.Blob
 
         private CloudBlobContainer GetContainerReference(string container)
         {
+            NameValidator.ValidateContainerName(container);
+
             var blobClient = _storageAccount.CreateCloudBlobClient();
             return blobClient.GetContainerReference(container.ToLower());
         }
@@ -749,7 +752,7 @@ namespace AzureStorage.Blob
 
         public async Task<string> SaveBlobAsync(string container, string key, Stream bloblStream, bool anonymousAccess = false)
         {
-            var blockBlob = await GetBlockBlobReference(container, key, anonymousAccess);
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key, anonymousAccess, createIfNotExists: true);
 
             bloblStream.Position = 0;
 
@@ -765,30 +768,29 @@ namespace AzureStorage.Blob
             return blockBlob.Uri.AbsoluteUri;
         }
 
-        private async Task<CloudBlockBlob> GetBlockBlobReference(string container, string key, bool anonymousAccess)
+        private async Task<CloudBlockBlob> GetBlockBlobReferenceAsync(string container, string key, bool anonymousAccess = false, bool createIfNotExists = false)
         {
+            NameValidator.ValidateBlobName(key);
+
             var containerRef = GetContainerReference(container);
 
-            if (!await containerRef.ExistsAsync(GetRequestOptions(), null))
+            if (createIfNotExists)
             {
                 await containerRef.CreateIfNotExistsAsync(GetRequestOptions(), null);
-                if (anonymousAccess)
-                {
-                    BlobContainerPermissions permissions = await containerRef.GetPermissionsAsync(null, GetRequestOptions(), null);
-                    permissions.PublicAccess = BlobContainerPublicAccessType.Container;
-                    await containerRef.SetPermissionsAsync(permissions, null, GetRequestOptions(), null);
-                }
             }
-
+            if (anonymousAccess)
+            {
+                var permissions = await containerRef.GetPermissionsAsync(null, GetRequestOptions(), null);
+                permissions.PublicAccess = BlobContainerPublicAccessType.Container;
+                await containerRef.SetPermissionsAsync(permissions, null, GetRequestOptions(), null);
+            }
+            
             return containerRef.GetBlockBlobReference(key);
         }
 
         public async Task SaveBlobAsync(string container, string key, byte[] blob)
         {
-            var containerRef = GetContainerReference(container);
-            await containerRef.CreateIfNotExistsAsync(GetRequestOptions(), null);
-
-            var blockBlob = containerRef.GetBlockBlobReference(key);
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key, createIfNotExists: true);
 
             var mimeType = GetMimeType(key);
 
@@ -803,11 +805,14 @@ namespace AzureStorage.Blob
         public async Task<bool> CreateContainerIfNotExistsAsync(string container)
         {
             var containerRef = GetContainerReference(container);
+
             return await containerRef.CreateIfNotExistsAsync(GetRequestOptions(), null);
         }
 
         public Task<bool> HasBlobAsync(string container, string key)
         {
+            NameValidator.ValidateBlobName(key);
+
             var blobRef = GetContainerReference(container).GetBlobReference(key);
             return blobRef.ExistsAsync(GetRequestOptions(), null);
         }
@@ -836,9 +841,8 @@ namespace AzureStorage.Blob
 
         public async Task<Stream> GetAsync(string blobContainer, string key)
         {
-            var containerRef = GetContainerReference(blobContainer);
-            var blockBlob = containerRef.GetBlockBlobReference(key);
-
+            var blockBlob = await GetBlockBlobReferenceAsync(blobContainer, key);
+            
             var ms = new MemoryStream();
             await blockBlob.DownloadToStreamAsync(ms, null, GetRequestOptions(), null);
             ms.Position = 0;
@@ -847,16 +851,13 @@ namespace AzureStorage.Blob
 
         public async Task<string> GetAsTextAsync(string blobContainer, string key)
         {
-            var containerRef = GetContainerReference(blobContainer);
-
-            var blockBlob = containerRef.GetBlockBlobReference(key);
+            var blockBlob = await GetBlockBlobReferenceAsync(blobContainer, key);
             return await blockBlob.DownloadTextAsync(null, GetRequestOptions(), null);
         }
 
         public string GetBlobUrl(string container, string key)
         {
-            var containerRef = GetContainerReference(container);
-            var blockBlob = containerRef.GetBlockBlobReference(key);
+            var blockBlob = GetBlockBlobReferenceAsync(container, key).GetAwaiter().GetResult();
 
             return blockBlob.Uri.AbsoluteUri;
         }
@@ -923,23 +924,19 @@ namespace AzureStorage.Blob
             return results;
         }
 
-        public Task DelBlobAsync(string blobContainer, string key)
+        public async Task DelBlobAsync(string blobContainer, string key)
         {
-            var containerRef = GetContainerReference(blobContainer);
-
-            var blockBlob = containerRef.GetBlockBlobReference(key);
-            return blockBlob.DeleteAsync(DeleteSnapshotsOption.None, null, GetRequestOptions(), null);
+            var blockBlob = await GetBlockBlobReferenceAsync(blobContainer, key);
+            await blockBlob.DeleteAsync(DeleteSnapshotsOption.None, null, GetRequestOptions(), null);
         }
 
         public Stream this[string container, string key]
         {
             get
             {
-                var containerRef = GetContainerReference(container);
-
-                var blockBlob = containerRef.GetBlockBlobReference(key);
+                var blockBlob = GetBlockBlobReferenceAsync(container, key).GetAwaiter().GetResult();
                 var ms = new MemoryStream();
-                blockBlob.DownloadToStreamAsync(ms, null, GetRequestOptions(), null).RunSync();
+                blockBlob.DownloadToStreamAsync(ms, null, GetRequestOptions(), null).GetAwaiter().GetResult();
                 ms.Position = 0;
                 return ms;
             }
@@ -962,8 +959,7 @@ namespace AzureStorage.Blob
             if (!await HasBlobAsync(container, key))
                 return new Dictionary<string, string>();
 
-            var containerRef = GetContainerReference(container);
-            var blockBlob = containerRef.GetBlockBlobReference(key);
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key);
             await blockBlob.FetchAttributesAsync();
 
             return blockBlob.Metadata;
