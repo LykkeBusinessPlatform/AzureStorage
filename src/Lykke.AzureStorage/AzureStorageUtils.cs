@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using AzureStorage.Tables.Templates;
 using AzureStorage.Tables.Templates.Index;
+using JetBrains.Annotations;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -25,7 +25,7 @@ namespace AzureStorage
         Short
     }
 
-
+    [PublicAPI]
     public static class AzureStorageUtils
     {
         public const int Conflict = 409;
@@ -656,6 +656,27 @@ namespace AzureStorage
                 if (no == 999)
                     throw new Exception("Can not insert record: " + PrintItem(entity));
                 no++;
+            }
+        }
+
+        /// <summary>
+        /// Inserts the <paramref name="item"/> to the storage. If row successfully inserted, method returns true,
+        /// If row with given rartition key and row key already exists, then method returns false.
+        /// Method is auto-retries according to the <paramref name="storage"/> settings
+        /// </summary>
+        /// <returns>True is row is successfully inserted, false if row with given rartition key and row key already exists</returns>
+        public static async Task<bool> TryInsertAsync<TEntity>(this INoSQLTableStorage<TEntity> storage, TEntity item) 
+            where TEntity : ITableEntity, new()
+        {
+            try
+            {
+                await storage.InsertAsync(item, Conflict);
+
+                return true;
+            }
+            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == Conflict)
+            {
+                return false;
             }
         }
 
