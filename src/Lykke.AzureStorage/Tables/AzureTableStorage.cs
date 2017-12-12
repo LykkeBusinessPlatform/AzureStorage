@@ -135,8 +135,12 @@ namespace AzureStorage.Tables
         {
             NameValidator.ValidateTableName(tableName);
 
-            async Task<INoSQLTableStorage<T>> MakeStorage() 
-                => new AzureTableStorage<T>(await connectionStringManager.Reload(), tableName, maxExecutionTimeout, createTableAutomatically);
+            async Task<INoSQLTableStorage<T>> MakeStorage(bool reload) 
+                => new AzureTableStorage<T>(
+                    reload ? await connectionStringManager.Reload() : connectionStringManager.CurrentValue,
+                    tableName,
+                    maxExecutionTimeout,
+                    createTableAutomatically);
 
             return
                 new LogExceptionsAzureTableStorageDecorator<T>(
@@ -180,8 +184,11 @@ namespace AzureStorage.Tables
         {
             NameValidator.ValidateTableName(tableName);
 
-            async Task<INoSQLTableStorage<T>> MakeStorage() 
-                => new AzureTableStorage<T>(await connectionStringManager.Reload(), tableName, maxExecutionTimeout);
+            async Task<INoSQLTableStorage<T>> MakeStorage(bool reload) 
+                => new AzureTableStorage<T>(
+                    reload ? await connectionStringManager.Reload() : connectionStringManager.CurrentValue,
+                    tableName,
+                    maxExecutionTimeout);
 
             return
                 new LogExceptionsAzureTableStorageDecorator<T>(

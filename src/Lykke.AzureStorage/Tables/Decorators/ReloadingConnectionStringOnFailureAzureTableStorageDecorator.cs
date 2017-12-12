@@ -15,9 +15,9 @@ namespace AzureStorage.Tables.Decorators
     {
         public string Name => Wrap(x => x.Name);
 
-        protected override Func<Task<INoSQLTableStorage<TEntity>>> MakeStorage { get; }
+        protected override Func<bool, Task<INoSQLTableStorage<TEntity>>> MakeStorage { get; }
 
-        public ReloadingConnectionStringOnFailureAzureTableStorageDecorator(Func<Task<INoSQLTableStorage<TEntity>>> makeStorage)
+        public ReloadingConnectionStringOnFailureAzureTableStorageDecorator(Func<bool, Task<INoSQLTableStorage<TEntity>>> makeStorage)
         {
             MakeStorage = makeStorage;
         }

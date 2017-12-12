@@ -8,7 +8,7 @@ namespace AzureStorage
 {
     public abstract class ReloadingOnFailureDecoratorBase<TStorage>
     {
-        protected abstract Func<Task<TStorage>> MakeStorage { get; }
+        protected abstract Func<bool, Task<TStorage>> MakeStorage { get; }
 
         private readonly ReaderWriterLockSlim _sync = new ReaderWriterLockSlim();
         private Task<TStorage> _currentTask;
@@ -41,7 +41,7 @@ namespace AzureStorage
                     return _currentTask;
                 }
 
-                return _currentTask = MakeStorage();
+                return _currentTask = MakeStorage(reload);
             }
             finally
             {

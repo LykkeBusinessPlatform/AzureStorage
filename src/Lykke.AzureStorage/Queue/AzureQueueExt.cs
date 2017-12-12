@@ -38,7 +38,10 @@ namespace AzureStorage.Queue
             NameValidator.ValidateQueueName(queueName);
 
             return new ReloadingConnectionStringOnFailureAzureQueueDecorator(
-                async () => new AzureQueueExt(await connectionStringManager.Reload(), queueName, maxExecutionTimeout)
+                async (bool reload) => new AzureQueueExt(
+                    reload ? await connectionStringManager.Reload() : connectionStringManager.CurrentValue,
+                    queueName,
+                    maxExecutionTimeout)
             );
         }
 
