@@ -10,9 +10,9 @@ namespace AzureStorage.Blob.Decorators
     /// </summary>
     internal class ReloadingConnectionStringOnFailureAzureBlobDecorator : ReloadingOnFailureDecoratorBase<IBlobStorage>, IBlobStorage
     {
-        protected override Func<Task<IBlobStorage>> MakeStorage { get; }
+        protected override Func<bool, Task<IBlobStorage>> MakeStorage { get; }
 
-        public ReloadingConnectionStringOnFailureAzureBlobDecorator(Func<Task<IBlobStorage>> makeStorage)
+        public ReloadingConnectionStringOnFailureAzureBlobDecorator(Func<bool, Task<IBlobStorage>> makeStorage)
         {
             MakeStorage = makeStorage;
         }

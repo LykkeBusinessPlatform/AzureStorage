@@ -727,7 +727,9 @@ namespace AzureStorage.Blob
         {
             return new RetryOnFailureAzureBlobDecorator(
                 new ReloadingConnectionStringOnFailureAzureBlobDecorator(
-                    async () => new AzureBlobStorage(await connectionStringManager.Reload(), maxExecutionTimeout)
+                    async (bool reload) => new AzureBlobStorage(
+                        reload ? await connectionStringManager.Reload() : connectionStringManager.CurrentValue,
+                        maxExecutionTimeout)
                 ),
                 onModificationRetryCount,
                 onGettingRetryCount,

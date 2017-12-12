@@ -63,7 +63,7 @@ namespace Lykke.AzureStorage.Test
             var mi = MockInfo<TestEntity, bool>.CreateForResult(x => x.RecordExists(It.IsAny<TestEntity>()));
             var m = mi.CreateMockForSequence(MockConfig.GoodConnectionString);
 
-            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(() => Task.FromResult(m.Object));
+            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(_ => Task.FromResult(m.Object));
 
             // Act
             tableStorage.RecordExists(It.IsAny<TestEntity>());
@@ -79,7 +79,7 @@ namespace Lykke.AzureStorage.Test
             var mi = MockInfo<TestEntity, Task>.CreateForTask(x => x.DeleteAsync(It.IsAny<TestEntity>()));
             var m = mi.CreateMockForSequence(MockConfig.GoodConnectionString);
 
-            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(() => Task.FromResult(m.Object));
+            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(_ => Task.FromResult(m.Object));
 
             // Act
             await tableStorage.DeleteAsync(It.IsAny<TestEntity>());
@@ -95,7 +95,7 @@ namespace Lykke.AzureStorage.Test
             var mi = MockInfo<TestEntity, Task<TestEntity>>.CreateForTaskResult(x => x.GetTopRecordAsync(It.IsAny<string>()));
             var m = mi.CreateMockForSequence(MockConfig.GoodConnectionString);
 
-            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(() => Task.FromResult(m.Object));
+            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(_ => Task.FromResult(m.Object));
 
             // Act
             await tableStorage.GetTopRecordAsync(It.IsAny<string>());
@@ -115,7 +115,7 @@ namespace Lykke.AzureStorage.Test
             var mi = MockInfo<TestEntity, bool>.CreateForResult(x => x.RecordExists(It.IsAny<TestEntity>()));
             var m = mi.CreateMockForSequence(MockConfig.WrongConnectionString);
 
-            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(() => Task.FromResult(m.Object));
+            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(_ => Task.FromResult(m.Object));
 
             // Act - Assert
             Assert.ThrowsException<StorageException>(() => tableStorage.RecordExists(It.IsAny<TestEntity>()));
@@ -129,7 +129,7 @@ namespace Lykke.AzureStorage.Test
             var mi = MockInfo<TestEntity, Task>.CreateForTask(x => x.DeleteAsync(It.IsAny<TestEntity>()));
             var m = mi.CreateMockForSequence(MockConfig.WrongConnectionString);
 
-            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(() => Task.FromResult(m.Object));
+            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(_ => Task.FromResult(m.Object));
 
             // Act - Assert
             await Assert.ThrowsExceptionAsync<StorageException>(() => tableStorage.DeleteAsync(It.IsAny<TestEntity>()));
@@ -143,7 +143,7 @@ namespace Lykke.AzureStorage.Test
             var mi = MockInfo<TestEntity, Task<TestEntity>>.CreateForTaskResult(x => x.GetTopRecordAsync(It.IsAny<string>()));
             var m = mi.CreateMockForSequence(MockConfig.WrongConnectionString);
 
-            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(() => Task.FromResult(m.Object));
+            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(_ => Task.FromResult(m.Object));
 
             // Act - Assert
             await Assert.ThrowsExceptionAsync<StorageException>(() => tableStorage.GetTopRecordAsync(It.IsAny<string>()));
@@ -161,7 +161,7 @@ namespace Lykke.AzureStorage.Test
             var mi = MockInfo<TestEntity, bool>.CreateForResult(x => x.RecordExists(It.IsAny<TestEntity>()));
             var m = mi.CreateMockForSequence(MockConfig.WrongConnectionString, MockConfig.GoodConnectionString);
 
-            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(() => Task.FromResult(m.Object));
+            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(_ => Task.FromResult(m.Object));
 
             // Act
             tableStorage.RecordExists(It.IsAny<TestEntity>());
@@ -177,7 +177,7 @@ namespace Lykke.AzureStorage.Test
             var mi = MockInfo<TestEntity, Task>.CreateForTask(x => x.DeleteAsync(It.IsAny<TestEntity>()));
             var m = mi.CreateMockForSequence(MockConfig.WrongConnectionString, MockConfig.GoodConnectionString);
 
-            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(() => Task.FromResult(m.Object));
+            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(_ => Task.FromResult(m.Object));
 
             // Act
             await tableStorage.DeleteAsync(It.IsAny<TestEntity>());
@@ -193,7 +193,7 @@ namespace Lykke.AzureStorage.Test
             var mi = MockInfo<TestEntity, Task<TestEntity>>.CreateForTaskResult(x => x.GetTopRecordAsync(It.IsAny<string>()));
             var m = mi.CreateMockForSequence(MockConfig.WrongConnectionString, MockConfig.GoodConnectionString);
 
-            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(() => Task.FromResult(m.Object));
+            var tableStorage = new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<TestEntity>(_ => Task.FromResult(m.Object));
 
             // Act
             await tableStorage.GetTopRecordAsync(It.IsAny<string>());

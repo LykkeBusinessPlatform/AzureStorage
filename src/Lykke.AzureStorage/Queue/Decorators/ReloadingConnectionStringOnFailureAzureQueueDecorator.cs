@@ -7,9 +7,9 @@ namespace AzureStorage.Queue.Decorators
 {
     internal class ReloadingConnectionStringOnFailureAzureQueueDecorator : ReloadingOnFailureDecoratorBase<IQueueExt>, IQueueExt
     {
-        protected override Func<Task<IQueueExt>> MakeStorage { get; }
+        protected override Func<bool, Task<IQueueExt>> MakeStorage { get; }
 
-        public ReloadingConnectionStringOnFailureAzureQueueDecorator(Func<Task<IQueueExt>> makeStorage)
+        public ReloadingConnectionStringOnFailureAzureQueueDecorator(Func<bool, Task<IQueueExt>> makeStorage)
         {
             MakeStorage = makeStorage;
         }
