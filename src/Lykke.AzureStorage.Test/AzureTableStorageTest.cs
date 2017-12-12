@@ -90,27 +90,27 @@ namespace Lykke.AzureStorage.Test
         [TestMethod]
         public void Test_that_invalid_table_name_throws()
         {
-            Assert.ThrowsException<InvalidOperationException>(() =>
+            Assert.ThrowsException<ArgumentException>(() =>
                 AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "_asd",
                     new LogToMemory()));
 
-            Assert.ThrowsException<InvalidOperationException>(() =>
+            Assert.ThrowsException<ArgumentException>(() =>
                 AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "1asd",
                     new LogToMemory()));
 
-            Assert.ThrowsException<InvalidOperationException>(() =>
+            Assert.ThrowsException<ArgumentException>(() =>
                 AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "a_sd",
                     new LogToMemory()));
 
-            Assert.ThrowsException<InvalidOperationException>(() =>
+            Assert.ThrowsException<ArgumentException>(() =>
                 AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "a-sd",
                     new LogToMemory()));
 
-            Assert.ThrowsException<InvalidOperationException>(() =>
+            Assert.ThrowsException<ArgumentException>(() =>
                 AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "as",
                     new LogToMemory()));
 
-            Assert.ThrowsException<InvalidOperationException>(() =>
+            Assert.ThrowsException<ArgumentException>(() =>
                 AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), new string('a', 64), 
                     new LogToMemory()));
         }
