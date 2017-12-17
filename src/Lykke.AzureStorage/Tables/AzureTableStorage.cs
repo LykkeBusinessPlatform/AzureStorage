@@ -311,7 +311,8 @@ namespace AzureStorage.Tables
         public async Task InsertOrMergeBatchAsync(IEnumerable<T> items)
         {
             items = items.ToArray();
-            
+
+            //todo: удалить ToArray и Any, вместо этого проверить insertBatchOperation.count
             if (items.Any())
             {
                 var insertBatchOperation = new TableBatchOperation();
