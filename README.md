@@ -1,3 +1,5 @@
+Nuget: https://www.nuget.org/packages/Lykke.AzureStorage/
+
 # AzureStorage
 
 ## Passing connection string via ```IReloadingManager```
