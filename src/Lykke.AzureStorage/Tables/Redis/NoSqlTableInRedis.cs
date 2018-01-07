@@ -27,8 +27,7 @@ namespace AzureStorage.Tables.Redis
 
         #region consts
 
-        private const int _cachePageSize = 100;
-        private const int _dataRetrievalPieceSize = 100;
+        private const int CachePageSize = 100;
 
         #endregion
 
@@ -66,10 +65,10 @@ namespace AzureStorage.Tables.Redis
             if (string.IsNullOrWhiteSpace(_offset))
                 throw new ArgumentNullException(nameof(settings.TableName));
 
-            _options = new DistributedCacheEntryOptions()
+            _options = new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = settings.AbsoluteExpirationRelativeToNow,
-                SlidingExpiration = settings.SlidingExpiration
+                AbsoluteExpirationRelativeToNow = settings?.AbsoluteExpirationRelativeToNow,
+                SlidingExpiration = settings?.SlidingExpiration
             };
         }
 
@@ -81,7 +80,7 @@ namespace AzureStorage.Tables.Redis
 
             while (true)
             {
-                var batchKeys = _redisServer.Keys(pattern: Patterns.GetAll(_offset), pageOffset: pageOffset, pageSize: _cachePageSize);
+                var batchKeys = _redisServer.Keys(pattern: Patterns.GetAll(_offset), pageOffset: pageOffset, pageSize: CachePageSize).ToList();
 
                 if (!batchKeys.Any()) break;
 
@@ -180,7 +179,7 @@ namespace AzureStorage.Tables.Redis
 
             while (true)
             {
-                var batchKeys = _redisServer.Keys(pattern: pattern, pageOffset: pageOffset, pageSize: _cachePageSize);
+                var batchKeys = _redisServer.Keys(pattern: pattern, pageOffset: pageOffset, pageSize: CachePageSize);
                 var newkeys = batchKeys as RedisKey[] ?? batchKeys.ToArray();
                 if (!newkeys.Any())
                     break;
@@ -462,7 +461,7 @@ namespace AzureStorage.Tables.Redis
 
         public async Task<IEnumerable<T>> GetTopRecordsAsync(string partition, int n)
         {
-            throw new NotSupportedException($"{nameof(GetTopRecordAsync)} not supported in {nameof(NoSqlTableInRedis<T>)}"); ;
+            throw new NotSupportedException($"{nameof(GetTopRecordAsync)} not supported in {nameof(NoSqlTableInRedis<T>)}");
         }
 
         public async Task<IEnumerable<T>> GetDataRowKeysOnlyAsync(IEnumerable<string> rowKeys)
