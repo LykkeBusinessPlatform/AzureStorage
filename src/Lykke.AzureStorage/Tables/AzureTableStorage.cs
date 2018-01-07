@@ -6,7 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 
 using AzureStorage.Tables.Decorators;
-
+using AzureStorage.Tables.Redis;
 using Common;
 using Common.Extensions;
 using Common.Log;
@@ -15,11 +15,12 @@ using Lykke.AzureStorage;
 using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Paging;
 using Lykke.SettingsReader;
-
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.WindowsAzure.Storage.Table.Protocol;
 using Newtonsoft.Json;
+using StackExchange.Redis;
 
 namespace AzureStorage.Tables
 {
@@ -195,13 +196,52 @@ namespace AzureStorage.Tables
 
             return
                 new LogExceptionsAzureTableStorageDecorator<T>(
-                    new CachedAzureTableStorageDecorator<T>(
+                    new MemoryCachedAzureTableStorageDecorator<T>(
                         new RetryOnFailureAzureTableStorageDecorator<T>(
                             new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<T>(MakeStorage),
                             onModificationRetryCount,
                             onGettingRetryCount,
                             retryDelay)
                     ),
+                    log);
+        }
+
+        public static INoSQLTableStorage<T> CreateWithRedisCache(
+            IReloadingManager<string> connectionStringManager,
+            IDistributedCache redisCache,
+            IDatabase redisDatabase,
+            IServer redisServer,
+            IAzureRedisSettings settings,
+            string tableName,
+            ILog log,
+            TimeSpan? maxExecutionTimeout = null,
+            int onModificationRetryCount = 10,
+            int onGettingRetryCount = 10,
+            TimeSpan? retryDelay = null,
+            bool createTableAutomatically = true)
+        {
+            NameValidator.ValidateTableName(tableName);
+
+            async Task<INoSQLTableStorage<T>> MakeStorage(bool reload)
+                => new AzureTableStorage<T>(
+                    reload ? await connectionStringManager.Reload() : connectionStringManager.CurrentValue,
+                    tableName,
+                    maxExecutionTimeout);
+
+            return
+                new LogExceptionsAzureTableStorageDecorator<T>(
+                    new RedisCachedAzureTableStorageDecorator<T>(
+                        new RetryOnFailureAzureTableStorageDecorator<T>(
+                            new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<T>(MakeStorage),
+                            onModificationRetryCount,
+                            onGettingRetryCount,
+                            retryDelay),
+                        redisCache,
+                        redisDatabase,
+                        redisServer,
+                        settings,
+                        tableName,
+                        log),
                     log);
         }
 
