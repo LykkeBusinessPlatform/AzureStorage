@@ -680,9 +680,48 @@ namespace AzureStorage
             }
         }
 
-		#endregion Inserts
+        /// <summary>
+        /// Returns existing or inserts new entity with the given <paramref name="partitionKey"/> and <paramref name="rowKey"/>.
+        /// In case of concurrent insertion, existing entity can be returned, even if <paramref name="createNew"/> was called. 
+        /// In this case result of the <paramref name="createNew"/> will be ignored.
+        /// </summary>
+        /// <param name="storage">The storage</param>
+        /// <param name="partitionKey">Partition key</param>
+        /// <param name="rowKey">Row key</param>
+        /// <param name="createNew">
+        /// Delegate to create new entity if it's doesn't exist yet.
+        /// If existing record exists, <paramref name="createNew"/> will not be called.
+        /// If concurrent insertion was performed, then <paramref name="createNew"/> will be called, but
+        /// existing entity will be returned as the result.
+        /// </param>
+        /// <returns></returns>
+        public static async Task<TEntity> GetOrInsertAsync<TEntity>(
+            this INoSQLTableStorage<TEntity> storage, 
+            string partitionKey, 
+            string rowKey, 
+            Func<TEntity> createNew) 
+            where TEntity : ITableEntity, new()
+        {
+            while (true)
+            {
+                var entity = await storage.GetDataAsync(partitionKey, rowKey);
+                if (entity != null)
+                {
+                    return entity;
+                }
 
-		public static async Task<T> MergeAsync<T>(this INoSQLTableStorage<AzureMultiIndex> indexTable, string partitionKey, string rowKey, INoSQLTableStorage<T> dataTable, Func<T, T> replaceCallback) where T : class, ITableEntity, new()
+                var newEntity = createNew();
+
+                if (await storage.TryInsertAsync(newEntity))
+                {
+                    return newEntity;
+                }
+            }
+        }
+
+        #endregion Inserts
+
+        public static async Task<T> MergeAsync<T>(this INoSQLTableStorage<AzureMultiIndex> indexTable, string partitionKey, string rowKey, INoSQLTableStorage<T> dataTable, Func<T, T> replaceCallback) where T : class, ITableEntity, new()
 		{
 			var indexEntity = await indexTable.GetDataAsync(partitionKey, rowKey);
 			if (indexEntity == null)
