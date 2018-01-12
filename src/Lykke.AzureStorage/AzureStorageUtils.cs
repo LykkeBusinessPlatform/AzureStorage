@@ -702,6 +702,15 @@ namespace AzureStorage
             Func<TEntity> createNew) 
             where TEntity : ITableEntity, new()
         {
+            if (partitionKey == null)
+            {
+                throw new ArgumentNullException(nameof(partitionKey));
+            }
+            if (rowKey == null)
+            {
+                throw new ArgumentNullException(nameof(rowKey));
+            }
+
             while (true)
             {
                 var entity = await storage.GetDataAsync(partitionKey, rowKey);
@@ -711,6 +720,17 @@ namespace AzureStorage
                 }
 
                 var newEntity = createNew();
+
+                if (newEntity.PartitionKey != partitionKey)
+                {
+                    throw new InvalidOperationException(
+                        $"Created entity partition key ({newEntity.PartitionKey}) should equals to the partition key ({partitionKey}) that is passed to the {nameof(GetOrInsertAsync)}");
+                }
+                if (newEntity.RowKey != rowKey)
+                {
+                    throw new InvalidOperationException(
+                        $"Created entity row key ({newEntity.RowKey}) should equals to the row key ({rowKey}) that is passed to the {nameof(GetOrInsertAsync)}");
+                }
 
                 if (await storage.TryInsertAsync(newEntity))
                 {
