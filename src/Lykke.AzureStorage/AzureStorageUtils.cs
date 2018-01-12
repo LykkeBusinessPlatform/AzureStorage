@@ -702,6 +702,10 @@ namespace AzureStorage
             Func<TEntity> createNew) 
             where TEntity : ITableEntity, new()
         {
+            if (storage == null)
+            {
+                throw new ArgumentNullException(nameof(storage));
+            }
             if (partitionKey == null)
             {
                 throw new ArgumentNullException(nameof(partitionKey));
@@ -709,6 +713,10 @@ namespace AzureStorage
             if (rowKey == null)
             {
                 throw new ArgumentNullException(nameof(rowKey));
+            }
+            if (createNew == null)
+            {
+                throw new ArgumentNullException(nameof(createNew));
             }
 
             while (true)
@@ -721,6 +729,10 @@ namespace AzureStorage
 
                 var newEntity = createNew();
 
+                if (newEntity == null)
+                {
+                    throw new InvalidOperationException($"Created entity should be not null");
+                }
                 if (newEntity.PartitionKey != partitionKey)
                 {
                     throw new InvalidOperationException(
