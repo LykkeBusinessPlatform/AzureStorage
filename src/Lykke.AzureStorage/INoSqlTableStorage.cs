@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AzureStorage.Tables;
+using Lykke.AzureStorage;
 using Lykke.AzureStorage.Tables.Paging;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -56,6 +57,13 @@ namespace AzureStorage
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used
         /// </summary>
         Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> item);
+
+        /// <summary>
+        /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used.
+        /// Doesn't logs optimistic concurrency exceptions.
+        /// </summary>
+        /// <exception cref="OptimisticConcurrencyException">Will be thrown when entity was changed by someone else</exception>
+        Task ReplaceAsync(T entity);
 
         /// <summary>
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used

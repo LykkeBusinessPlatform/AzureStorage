@@ -72,17 +72,27 @@ namespace AzureStorage.Tables.Decorators
                 retryDelay: retryDelay ?? TimeSpan.FromMilliseconds(200),
                 exceptionFilter: e =>
                 {
-                    var storageException = e as StorageException;
-                    var noRetryStatusCodes = new[]
+                    switch (e)
                     {
-                        HttpStatusCode.Conflict,
-                        HttpStatusCode.BadRequest,
-                        HttpStatusCode.PreconditionFailed
-                    };
+                        case OptimisticConcurrencyException _:
+                            return RetryService.ExceptionFilterResult.ThrowImmediately;
 
-                    return storageException != null && noRetryStatusCodes.Contains((HttpStatusCode) storageException.RequestInformation.HttpStatusCode)
-                        ? RetryService.ExceptionFilterResult.ThrowImmediately
-                        : RetryService.ExceptionFilterResult.ThrowAfterRetries;
+                        case StorageException storageException:
+                        {
+                            var noRetryStatusCodes = new[]
+                            {
+                                HttpStatusCode.Conflict,
+                                HttpStatusCode.BadRequest,
+                                HttpStatusCode.PreconditionFailed
+                            };
+
+                            return noRetryStatusCodes.Contains((HttpStatusCode) storageException.RequestInformation.HttpStatusCode)
+                                ? RetryService.ExceptionFilterResult.ThrowImmediately
+                                : RetryService.ExceptionFilterResult.ThrowAfterRetries;
+                        }
+                    }
+
+                    return RetryService.ExceptionFilterResult.ThrowAfterRetries;
                 });
         }
 
@@ -117,6 +127,11 @@ namespace AzureStorage.Tables.Decorators
         public async Task<TEntity> ReplaceAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
         {
             return await _retryService.RetryAsync(async () => await _impl.ReplaceAsync(partitionKey, rowKey, item), _onModificationsRetryCount);
+        }
+
+        public Task ReplaceAsync(TEntity entity)
+        {
+            return _retryService.RetryAsync(() => _impl.ReplaceAsync(entity), _onModificationsRetryCount);
         }
 
         public async Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)

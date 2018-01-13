@@ -49,6 +49,9 @@ namespace AzureStorage.Tables.Decorators
         public Task<TEntity> ReplaceAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
             => WrapAsync(x => x.ReplaceAsync(partitionKey, rowKey, item));
 
+        public Task ReplaceAsync(TEntity entity)
+            => WrapAsync(x => x.ReplaceAsync(entity));
+
         public Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
             => WrapAsync(x => x.MergeAsync(partitionKey, rowKey, item));
 

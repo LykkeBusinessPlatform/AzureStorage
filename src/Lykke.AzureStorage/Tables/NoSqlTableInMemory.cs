@@ -232,6 +232,23 @@ namespace AzureStorage.Tables
             }
         }
 
+        public async Task ReplaceAsync(T entity)
+        {
+            await _lockSlim.WaitAsync();
+            try
+            {
+                var row = GetRow(entity.PartitionKey, entity.RowKey);
+                if (row == null)
+                    return;
+
+                row.Replace(entity);
+            }
+            finally
+            {
+                _lockSlim.Release();
+            }
+        }
+
         public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
         {
             await _lockSlim.WaitAsync();

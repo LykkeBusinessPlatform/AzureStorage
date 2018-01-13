@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 using AzureStorage.Tables.Decorators;
@@ -10,6 +11,7 @@ using Common;
 using Common.Extensions;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.AzureStorage;
 using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Paging;
 using Lykke.SettingsReader;
@@ -349,6 +351,21 @@ namespace AzureStorage.Tables
                     if (e.RequestInformation.HttpStatusCode != 412)
                         throw;
                 }
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task ReplaceAsync(T entity)
+        {
+            try
+            {
+                var table = await GetTableAsync();
+
+                await table.ExecuteAsync(TableOperation.Replace(entity), GetRequestOptions(), null);
+            }
+            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.PreconditionFailed)
+            {
+                throw new OptimisticConcurrencyException(entity, e);
             }
         }
 

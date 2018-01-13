@@ -60,6 +60,12 @@ namespace AzureStorage.Tables.Decorators
             return result;
         }
 
+        public async Task ReplaceAsync(T entity)
+        {
+            await _table.ReplaceAsync(entity);
+            await _cache.ReplaceAsync(entity);
+        }
+
         public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
         {
             var result = await _table.MergeAsync(partitionKey, rowKey, item);

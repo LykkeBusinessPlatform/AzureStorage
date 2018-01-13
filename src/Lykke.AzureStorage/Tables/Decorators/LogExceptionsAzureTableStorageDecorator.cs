@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Common.Extensions;
 using Common.Log;
+using Lykke.AzureStorage;
 using Lykke.AzureStorage.Tables.Paging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -75,6 +76,15 @@ namespace AzureStorage.Tables.Decorators
                 }),
                 nameof(ReplaceAsync),
                 result);
+        }
+
+        public Task ReplaceAsync(TEntity entity)
+        {
+            return WrapAsync(
+                () => _impl.ReplaceAsync(entity), 
+                nameof(ReplaceAsync), 
+                entity, 
+                exceptionsFilter: ex => !(ex is OptimisticConcurrencyException));
         }
 
         public Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
@@ -198,7 +208,12 @@ namespace AzureStorage.Tables.Decorators
 
         #region Private members
 
-        private async Task<TResult> WrapAsync<TResult>(Func<Task<TResult>> func, string process, object context = null, IEnumerable<int> notLogAzureCodes = null)
+        private async Task<TResult> WrapAsync<TResult>(
+            Func<Task<TResult>> func, 
+            string process, 
+            object context = null, 
+            IEnumerable<int> notLogAzureCodes = null,
+            Func<Exception, bool> exceptionsFilter = null)
         {
             try
             {
@@ -206,12 +221,17 @@ namespace AzureStorage.Tables.Decorators
             }
             catch (Exception ex)
             {
-                await HandleExceptionAsync(ex, process, context, notLogAzureCodes);
+                await HandleExceptionAsync(ex, process, context, notLogAzureCodes, exceptionsFilter);
                 throw;
             }
         }
 
-        private async Task WrapAsync(Func<Task> func, string process, object context = null, IEnumerable<int> notLogAzureCodes = null)
+        private async Task WrapAsync(
+            Func<Task> func, 
+            string process, 
+            object context = null, 
+            IEnumerable<int> notLogAzureCodes = null,
+            Func<Exception, bool> exceptionsFilter = null)
         {
             try
             {
@@ -219,12 +239,17 @@ namespace AzureStorage.Tables.Decorators
             }
             catch (Exception ex)
             {
-                await HandleExceptionAsync(ex, process, context, notLogAzureCodes);
+                await HandleExceptionAsync(ex, process, context, notLogAzureCodes, exceptionsFilter);
                 throw;
             }
         }
 
-        private TResult Wrap<TResult>(Func<TResult> func, string process, object context = null, IEnumerable<int> notLogAzureCodes = null)
+        private TResult Wrap<TResult>(
+            Func<TResult> func, 
+            string process, 
+            object context = null,
+            IEnumerable<int> notLogAzureCodes = null,
+            Func<Exception, bool> exceptionsFilter = null)
         {
             try
             {
@@ -232,13 +257,23 @@ namespace AzureStorage.Tables.Decorators
             }
             catch (Exception ex)
             {
-                HandleExceptionAsync(ex, process, context, notLogAzureCodes).RunSync();
+                HandleExceptionAsync(ex, process, context, notLogAzureCodes, exceptionsFilter).RunSync();
                 throw;
             }
         }
 
-        private async Task HandleExceptionAsync(Exception exception, string process, object context, IEnumerable<int> notLogAzureCodes)
+        private async Task HandleExceptionAsync(
+            Exception exception,
+            string process, 
+            object context, 
+            IEnumerable<int> notLogAzureCodes,
+            Func<Exception, bool> exceptionsFilter)
         {
+            if (exceptionsFilter != null && !exceptionsFilter(exception))
+            {
+                return;
+            }
+
             if (exception is TaskCanceledException)
             {
                 await _log.WriteWarningAsync(
