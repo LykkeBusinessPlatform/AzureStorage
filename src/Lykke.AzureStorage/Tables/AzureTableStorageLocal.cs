@@ -69,6 +69,11 @@ namespace AzureStorage.Tables
             return itm;
         }
 
+        public Task ReplaceAsync(T entity)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
         {
             return ReplaceAsync(partitionKey, rowKey, item);
