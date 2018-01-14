@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Diagnostics;
-using Microsoft.ApplicationInsights;
 using Microsoft.WindowsAzure.Storage.Table;
 using Lykke.AzureStorage.Tables.Paging;
 
@@ -12,12 +10,12 @@ namespace AzureStorage.Tables.Decorators
     /// <summary>
     /// Decorator which explicitly calls AppInsights API to submit Azure Table Storage call events
     /// </summary>
-    internal class ExplicitAppInsightsAzureTableStorageDecorator<TEntity> : INoSQLTableStorage<TEntity>
+    internal class ExplicitAppInsightsAzureTableStorageDecorator<TEntity> : ExplicitAppInsightsCallDecoratorBase, INoSQLTableStorage<TEntity>
         where TEntity : ITableEntity, new()
     {
-        private const string _telemetryDependencyType = "Azure table";
         private readonly INoSQLTableStorage<TEntity> _impl;
-        private readonly TelemetryClient _telemetry = new TelemetryClient();
+
+        protected override string TrackType => "Azure table";
 
         public string Name => _impl.Name;
 
@@ -29,233 +27,139 @@ namespace AzureStorage.Tables.Decorators
         #region INoSqlTableStorage{TEntity} decoration
 
         public IEnumerator<TEntity> GetEnumerator()
-            => Wrap(() => _impl.GetEnumerator(), nameof(GetEnumerator));
+            => Wrap(() => _impl.GetEnumerator(), Name);
 
         IEnumerator IEnumerable.GetEnumerator()
-            => Wrap(() => ((IEnumerable)_impl).GetEnumerator(), nameof(GetEnumerator));
+            => Wrap(() => ((IEnumerable)_impl).GetEnumerator(), Name);
 
         TEntity INoSQLTableStorage<TEntity>.this[string partition, string row]
-            => Wrap(() => _impl[partition, row], "[partition, row]");
+            => Wrap(() => _impl[partition, row], Name, "[partition, row]");
 
         IEnumerable<TEntity> INoSQLTableStorage<TEntity>.this[string partition]
-            => Wrap(() => _impl[partition], "[partition]");
+            => Wrap(() => _impl[partition], Name, "[partition]");
 
         public Task InsertAsync(TEntity item, params int[] notLogCodes)
-            => WrapAsync(() => _impl.InsertAsync(item, notLogCodes), nameof(InsertAsync));
+            => WrapAsync(() => _impl.InsertAsync(item, notLogCodes), Name, "InsertAsync item");
 
         public Task InsertAsync(IEnumerable<TEntity> items)
-            => WrapAsync(() => _impl.InsertAsync(items), nameof(InsertAsync));
+            => WrapAsync(() => _impl.InsertAsync(items), Name, "InsertAsync items");
 
         public Task InsertOrMergeAsync(TEntity item)
-            => WrapAsync(() => _impl.InsertOrMergeAsync(item), nameof(InsertOrMergeAsync));
+            => WrapAsync(() => _impl.InsertOrMergeAsync(item), Name);
 
         public Task InsertOrMergeBatchAsync(IEnumerable<TEntity> items)
-            => WrapAsync(() => _impl.InsertOrMergeBatchAsync(items), nameof(InsertOrMergeBatchAsync));
+            => WrapAsync(() => _impl.InsertOrMergeBatchAsync(items), Name);
 
         public Task ReplaceAsync(TEntity entity)
-            => WrapAsync(() => _impl.ReplaceAsync(entity), nameof(ReplaceAsync));
+            => WrapAsync(() => _impl.ReplaceAsync(entity), Name, "ReplaceAsync - item");
 
         public Task<TEntity> ReplaceAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
-            => WrapAsync(() => _impl.ReplaceAsync(partitionKey, rowKey, item), nameof(ReplaceAsync));
+            => WrapAsync(() => _impl.ReplaceAsync(partitionKey, rowKey, item), Name, "ReplaceAsync - pk, rk, func");
 
         public Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
-            => WrapAsync(() => _impl.MergeAsync(partitionKey, rowKey, item), nameof(MergeAsync));
+            => WrapAsync(() => _impl.MergeAsync(partitionKey, rowKey, item), Name);
 
         public Task InsertOrReplaceBatchAsync(IEnumerable<TEntity> entities)
-            => WrapAsync(() => _impl.InsertOrReplaceBatchAsync(entities), nameof(InsertOrReplaceBatchAsync));
+            => WrapAsync(() => _impl.InsertOrReplaceBatchAsync(entities), Name);
 
         public Task InsertOrReplaceAsync(TEntity item)
-            => WrapAsync(() => _impl.InsertOrReplaceAsync(item), nameof(InsertOrReplaceAsync));
+            => WrapAsync(() => _impl.InsertOrReplaceAsync(item), Name, "InsertOrReplaceAsync item");
 
         public Task InsertOrReplaceAsync(IEnumerable<TEntity> items)
-            => WrapAsync(() => _impl.InsertOrReplaceAsync(items), nameof(InsertOrReplaceAsync));
+            => WrapAsync(() => _impl.InsertOrReplaceAsync(items), Name, "InsertOrReplaceAsync items");
 
         public Task DeleteAsync(TEntity item)
-            => WrapAsync(() => _impl.DeleteAsync(item), nameof(DeleteAsync));
+            => WrapAsync(() => _impl.DeleteAsync(item), Name, "DeleteAsync item");
 
         public Task<TEntity> DeleteAsync(string partitionKey, string rowKey)
-            => WrapAsync(() => _impl.DeleteAsync(partitionKey, rowKey), nameof(DeleteAsync));
-
-        public Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey)
-            => WrapAsync(() => _impl.DeleteIfExistAsync(partitionKey, rowKey), nameof(DeleteIfExistAsync));
+            => WrapAsync(() => _impl.DeleteAsync(partitionKey, rowKey), Name, "DeleteAsync [pk, rk]");
 
         public Task<bool> DeleteAsync()
-            => WrapAsync(() => _impl.DeleteAsync(), nameof(DeleteAsync));
+            => WrapAsync(() => _impl.DeleteAsync(), Name, "DeleteAsync table");
 
         public Task DeleteAsync(IEnumerable<TEntity> items)
-            => WrapAsync(() => _impl.DeleteAsync(items), nameof(DeleteAsync));
+            => WrapAsync(() => _impl.DeleteAsync(items), Name, "DeleteAsync items");
+
+        public Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey)
+            => WrapAsync(() => _impl.DeleteIfExistAsync(partitionKey, rowKey), Name);
 
         public Task<bool> CreateIfNotExistsAsync(TEntity item)
-            => WrapAsync(() => _impl.CreateIfNotExistsAsync(item), nameof(CreateIfNotExistsAsync));
+            => WrapAsync(() => _impl.CreateIfNotExistsAsync(item), Name);
 
         public bool RecordExists(TEntity item)
-            => Wrap(() => _impl.RecordExists(item), nameof(RecordExists));
+            => Wrap(() => _impl.RecordExists(item), Name);
 
         public Task<bool> RecordExistsAsync(TEntity item)
-            => WrapAsync(() => _impl.RecordExistsAsync(item), nameof(RecordExistsAsync));
+            => WrapAsync(() => _impl.RecordExistsAsync(item), Name);
 
         public Task<TEntity> GetDataAsync(string partition, string row)
-            => WrapAsync(() => _impl.GetDataAsync(partition, row), nameof(GetDataAsync));
+            => WrapAsync(() => _impl.GetDataAsync(partition, row), Name, "GetDataAsync - pk, rk");
 
         public Task<IList<TEntity>> GetDataAsync(Func<TEntity, bool> filter = null)
-            => WrapAsync(() => _impl.GetDataAsync(filter), nameof(GetDataAsync));
-
-        public Task<IEnumerable<TEntity>> GetDataAsync(string partitionKey, IEnumerable<string> rowKeys, int pieceSize = 100, Func<TEntity, bool> filter = null)
-            => WrapAsync(() => _impl.GetDataAsync(partitionKey, rowKeys, pieceSize, filter), nameof(GetDataAsync));
-
-        public Task<IEnumerable<TEntity>> GetDataAsync(IEnumerable<string> partitionKeys, int pieceSize = 100, Func<TEntity, bool> filter = null)
-            => WrapAsync(() => _impl.GetDataAsync(partitionKeys, pieceSize, filter), nameof(GetDataAsync));
-
-        public Task<IEnumerable<TEntity>> GetDataAsync(IEnumerable<Tuple<string, string>> keys, int pieceSize = 100, Func<TEntity, bool> filter = null)
-            => WrapAsync(() => _impl.GetDataAsync(keys, pieceSize, filter), nameof(GetDataAsync));
-
-        public Task GetDataByChunksAsync(Func<IEnumerable<TEntity>, Task> chunks)
-            => WrapAsync(() => _impl.GetDataByChunksAsync(chunks), nameof(GetDataByChunksAsync));
-
-        public Task GetDataByChunksAsync(TableQuery<TEntity> rangeQuery, Func<IEnumerable<TEntity>, Task> chunks)
-            => WrapAsync(() => _impl.GetDataByChunksAsync(rangeQuery, chunks), nameof(GetDataByChunksAsync));
-
-        public Task GetDataByChunksAsync(Action<IEnumerable<TEntity>> chunks)
-            => WrapAsync(() => _impl.GetDataByChunksAsync(chunks), nameof(GetDataByChunksAsync));
-
-        public Task GetDataByChunksAsync(TableQuery<TEntity> rangeQuery, Action<IEnumerable<TEntity>> chunks)
-            => WrapAsync(() => _impl.GetDataByChunksAsync(rangeQuery, chunks), nameof(GetDataByChunksAsync));
-
-        public Task GetDataByChunksAsync(string partitionKey, Action<IEnumerable<TEntity>> chunks)
-            => WrapAsync(() => _impl.GetDataByChunksAsync(partitionKey, chunks), nameof(GetDataByChunksAsync));
-
-        public Task ScanDataAsync(string partitionKey, Func<IEnumerable<TEntity>, Task> chunk)
-            => WrapAsync(() => _impl.ScanDataAsync(partitionKey, chunk), nameof(ScanDataAsync));
-
-        public Task ScanDataAsync(TableQuery<TEntity> rangeQuery, Func<IEnumerable<TEntity>, Task> chunk)
-            => WrapAsync(() => _impl.ScanDataAsync(rangeQuery, chunk), nameof(ScanDataAsync));
-
-        public Task<TEntity> FirstOrNullViaScanAsync(string partitionKey, Func<IEnumerable<TEntity>, TEntity> dataToSearch)
-            => WrapAsync(() => _impl.FirstOrNullViaScanAsync(partitionKey, dataToSearch), nameof(FirstOrNullViaScanAsync));
+            => WrapAsync(() => _impl.GetDataAsync(filter), Name, "GetDataAsync - filter");
 
         public Task<IEnumerable<TEntity>> GetDataAsync(string partition, Func<TEntity, bool> filter = null)
-            => WrapAsync(() => _impl.GetDataAsync(partition, filter), nameof(GetDataAsync));
+            => WrapAsync(() => _impl.GetDataAsync(partition, filter), Name, "GetDataAsync - 1 pk, filter");
+
+        public Task<IEnumerable<TEntity>> GetDataAsync(string partitionKey, IEnumerable<string> rowKeys, int pieceSize = 100, Func<TEntity, bool> filter = null)
+            => WrapAsync(() => _impl.GetDataAsync(partitionKey, rowKeys, pieceSize, filter), Name, "GetDataAsync - 1 pk, many rk");
+
+        public Task<IEnumerable<TEntity>> GetDataAsync(IEnumerable<string> partitionKeys, int pieceSize = 100, Func<TEntity, bool> filter = null)
+            => WrapAsync(() => _impl.GetDataAsync(partitionKeys, pieceSize, filter), Name, "GetDataAsync - many pk");
+
+        public Task<IEnumerable<TEntity>> GetDataAsync(IEnumerable<Tuple<string, string>> keys, int pieceSize = 100, Func<TEntity, bool> filter = null)
+            => WrapAsync(() => _impl.GetDataAsync(keys, pieceSize, filter), Name, "GetDataAsync - pairs");
+
+        public Task GetDataByChunksAsync(Func<IEnumerable<TEntity>, Task> chunks)
+            => WrapAsync(() => _impl.GetDataByChunksAsync(chunks), Name, "GetDataByChunksAsync - chunk tasks");
+
+        public Task GetDataByChunksAsync(TableQuery<TEntity> rangeQuery, Func<IEnumerable<TEntity>, Task> chunks)
+            => WrapAsync(() => _impl.GetDataByChunksAsync(rangeQuery, chunks), Name, "GetDataByChunksAsync - query, chunk tasks");
+
+        public Task GetDataByChunksAsync(Action<IEnumerable<TEntity>> chunks)
+            => WrapAsync(() => _impl.GetDataByChunksAsync(chunks), Name, "GetDataByChunksAsync - chunks");
+
+        public Task GetDataByChunksAsync(TableQuery<TEntity> rangeQuery, Action<IEnumerable<TEntity>> chunks)
+            => WrapAsync(() => _impl.GetDataByChunksAsync(rangeQuery, chunks), Name, "GetDataByChunksAsync - query, chunks");
+
+        public Task GetDataByChunksAsync(string partitionKey, Action<IEnumerable<TEntity>> chunks)
+            => WrapAsync(() => _impl.GetDataByChunksAsync(partitionKey, chunks), Name, "GetDataByChunksAsync - 1 pk, chunks");
+
+        public Task ScanDataAsync(string partitionKey, Func<IEnumerable<TEntity>, Task> chunk)
+            => WrapAsync(() => _impl.ScanDataAsync(partitionKey, chunk), Name, "ScanDataAsync - pk, chunk tasks");
+
+        public Task ScanDataAsync(TableQuery<TEntity> rangeQuery, Func<IEnumerable<TEntity>, Task> chunk)
+            => WrapAsync(() => _impl.ScanDataAsync(rangeQuery, chunk), Name, "ScanDataAsync - query, chunk tasks");
+
+        public Task<TEntity> FirstOrNullViaScanAsync(string partitionKey, Func<IEnumerable<TEntity>, TEntity> dataToSearch)
+            => WrapAsync(() => _impl.FirstOrNullViaScanAsync(partitionKey, dataToSearch), Name);
 
         public Task<TEntity> GetTopRecordAsync(string partition)
-            => WrapAsync(() => _impl.GetTopRecordAsync(partition), nameof(GetTopRecordAsync));
+            => WrapAsync(() => _impl.GetTopRecordAsync(partition), Name);
 
         public Task<IEnumerable<TEntity>> GetTopRecordsAsync(string partition, int n)
-            => WrapAsync(() => _impl.GetTopRecordsAsync(partition, n), nameof(GetTopRecordsAsync));
+            => WrapAsync(() => _impl.GetTopRecordsAsync(partition, n), Name);
 
         public Task<IEnumerable<TEntity>> GetDataRowKeysOnlyAsync(IEnumerable<string> rowKeys)
-            => WrapAsync(() => _impl.GetDataRowKeysOnlyAsync(rowKeys), nameof(GetDataRowKeysOnlyAsync));
+            => WrapAsync(() => _impl.GetDataRowKeysOnlyAsync(rowKeys), Name);
 
         public Task<IEnumerable<TEntity>> WhereAsyncc(TableQuery<TEntity> rangeQuery, Func<TEntity, Task<bool>> filter = null)
-            => WrapAsync(() => _impl.WhereAsyncc(rangeQuery, filter), nameof(WhereAsyncc));
+            => WrapAsync(() => _impl.WhereAsyncc(rangeQuery, filter), Name);
 
         public Task<IEnumerable<TEntity>> WhereAsync(TableQuery<TEntity> rangeQuery, Func<TEntity, bool> filter = null)
-            => WrapAsync(() => _impl.WhereAsync(rangeQuery, filter), nameof(WhereAsync));
+            => WrapAsync(() => _impl.WhereAsync(rangeQuery, filter), Name);
 
         public Task ExecuteAsync(TableQuery<TEntity> rangeQuery, Action<IEnumerable<TEntity>> yieldResult, Func<bool> stopCondition = null)
-            => WrapAsync(() => _impl.ExecuteAsync(rangeQuery, yieldResult, stopCondition), nameof(ExecuteAsync));
+            => WrapAsync(() => _impl.ExecuteAsync(rangeQuery, yieldResult, stopCondition), Name);
 
         public Task DoBatchAsync(TableBatchOperation batch)
-            => WrapAsync(() => _impl.DoBatchAsync(batch), nameof(DoBatchAsync));
+            => WrapAsync(() => _impl.DoBatchAsync(batch), Name);
 
         public Task<IPagedResult<TEntity>> ExecuteQueryWithPaginationAsync(TableQuery<TEntity> query, PagingInfo pagingInfo)
-            => WrapAsync(() => _impl.ExecuteQueryWithPaginationAsync(query, pagingInfo), nameof(ExecuteQueryWithPaginationAsync));
+            => WrapAsync(() => _impl.ExecuteQueryWithPaginationAsync(query, pagingInfo), Name);
 
         public Task CreateTableIfNotExistsAsync()
-            => WrapAsync(() => _impl.CreateTableIfNotExistsAsync(), nameof(CreateTableIfNotExistsAsync));
-
-        #endregion
-
-        #region decoration logic
-
-        private async Task<TResult> WrapAsync<TResult>(Func<Task<TResult>> func, string callName)
-        {
-            bool isSuccess = true;
-            var startTime = DateTime.UtcNow;
-            var timer = Stopwatch.StartNew();
-            try
-            {
-                return await func();
-            }
-            catch (Exception e)
-            {
-                isSuccess = false;
-                _telemetry.TrackException(e);
-                throw;
-            }
-            finally
-            {
-                timer.Stop();
-                _telemetry.TrackDependency(
-                    _telemetryDependencyType,
-                    _impl.Name,
-                    callName,
-                    callName,
-                    startTime,
-                    timer.Elapsed,
-                    null,
-                    isSuccess);
-            }
-        }
-
-        private async Task WrapAsync(Func<Task> func, string callName)
-        {
-            bool isSuccess = true;
-            var startTime = DateTime.UtcNow;
-            var timer = Stopwatch.StartNew();
-            try
-            {
-                await func();
-            }
-            catch (Exception e)
-            {
-                isSuccess = false;
-                _telemetry.TrackException(e);
-                throw;
-            }
-            finally
-            {
-                timer.Stop();
-                _telemetry.TrackDependency(
-                    _telemetryDependencyType,
-                    _impl.Name,
-                    callName,
-                    callName,
-                    startTime,
-                    timer.Elapsed,
-                    null,
-                    isSuccess);
-            }
-        }
-
-        private TResult Wrap<TResult>(Func<TResult> func, string callName)
-        {
-            bool isSuccess = true;
-            var startTime = DateTime.UtcNow;
-            var timer = Stopwatch.StartNew();
-            try
-            {
-                return func();
-            }
-            catch (Exception e)
-            {
-                isSuccess = false;
-                _telemetry.TrackException(e);
-                throw;
-            }
-            finally
-            {
-                timer.Stop();
-                _telemetry.TrackDependency(
-                    _telemetryDependencyType,
-                    _impl.Name,
-                    callName,
-                    callName,
-                    startTime,
-                    timer.Elapsed,
-                    null,
-                    isSuccess);
-            }
-        }
+            => WrapAsync(() => _impl.CreateTableIfNotExistsAsync(), Name);
 
         #endregion
     }

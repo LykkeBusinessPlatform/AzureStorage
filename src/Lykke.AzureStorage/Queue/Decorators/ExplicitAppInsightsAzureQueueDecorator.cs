@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Diagnostics;
-using Microsoft.ApplicationInsights;
+﻿using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Queue;
 
 namespace AzureStorage.Queue.Decorators
@@ -9,11 +6,11 @@ namespace AzureStorage.Queue.Decorators
     /// <summary>
     /// Decorator which explicitly calls AppInsights API to submit Azure Queue call events
     /// </summary>
-    internal class ExplicitAppInsightsAzureQueueDecorator : IQueueExt
+    internal class ExplicitAppInsightsAzureQueueDecorator : ExplicitAppInsightsCallDecoratorBase, IQueueExt
     {
-        private const string _telemetryDependencyType = "Azure queue";
         private readonly IQueueExt _impl;
-        private readonly TelemetryClient _telemetry = new TelemetryClient();
+
+        protected override string TrackType => "Azure queue";
 
         public string Name => _impl.Name;
 
@@ -25,131 +22,37 @@ namespace AzureStorage.Queue.Decorators
         #region IQueueExt decoration
 
         public Task PutRawMessageAsync(string msg)
-            => WrapAsync(() => _impl.PutRawMessageAsync(msg), nameof(PutRawMessageAsync));
+            => WrapAsync(() => _impl.PutRawMessageAsync(msg), Name);
 
         public Task<string> PutMessageAsync(object itm)
-            => WrapAsync(() => _impl.PutMessageAsync(itm), nameof(PutMessageAsync));
+            => WrapAsync(() => _impl.PutMessageAsync(itm), Name);
 
         public Task<QueueData> GetMessageAsync()
-            => WrapAsync(() => _impl.GetMessageAsync(), nameof(GetMessageAsync));
+            => WrapAsync(() => _impl.GetMessageAsync(), Name);
 
         public Task FinishMessageAsync(QueueData token)
-            => WrapAsync(() => _impl.FinishMessageAsync(token), nameof(FinishMessageAsync));
+            => WrapAsync(() => _impl.FinishMessageAsync(token), Name);
 
         public Task<object[]> GetMessagesAsync(int maxCount)
-            => WrapAsync(() => _impl.GetMessagesAsync(maxCount), nameof(GetMessagesAsync));
+            => WrapAsync(() => _impl.GetMessagesAsync(maxCount), Name);
 
         public Task ClearAsync()
-            => WrapAsync(() => _impl.ClearAsync(), nameof(ClearAsync));
+            => WrapAsync(() => _impl.ClearAsync(), Name);
 
         public void RegisterTypes(params QueueType[] type)
-            => Wrap(() => _impl.RegisterTypes(type), nameof(RegisterTypes));
+            => Wrap(() => _impl.RegisterTypes(type), Name);
 
         public Task<CloudQueueMessage> GetRawMessageAsync(int visibilityTimeoutSeconds = 30)
-            => WrapAsync(() => _impl.GetRawMessageAsync(visibilityTimeoutSeconds), nameof(GetRawMessageAsync));
+            => WrapAsync(() => _impl.GetRawMessageAsync(visibilityTimeoutSeconds), Name);
 
         public Task FinishRawMessageAsync(CloudQueueMessage msg)
-            => WrapAsync(() => _impl.FinishRawMessageAsync(msg), nameof(FinishRawMessageAsync));
+            => WrapAsync(() => _impl.FinishRawMessageAsync(msg), Name);
 
         public Task ReleaseRawMessageAsync(CloudQueueMessage msg)
-            => WrapAsync(() => _impl.ReleaseRawMessageAsync(msg), nameof(ReleaseRawMessageAsync));
+            => WrapAsync(() => _impl.ReleaseRawMessageAsync(msg), Name);
 
         public Task<int?> Count()
-            => WrapAsync(() => _impl.Count(), nameof(Count));
-
-        #endregion
-
-        #region decoration logic
-
-        private async Task<TResult> WrapAsync<TResult>(Func<Task<TResult>> func, string callName)
-        {
-            bool isSuccess = true;
-            var startTime = DateTime.UtcNow;
-            var timer = Stopwatch.StartNew();
-            try
-            {
-                return await func();
-            }
-            catch (Exception e)
-            {
-                isSuccess = false;
-                _telemetry.TrackException(e);
-                throw;
-            }
-            finally
-            {
-                timer.Stop();
-                _telemetry.TrackDependency(
-                    _telemetryDependencyType,
-                    _impl.Name,
-                    callName,
-                    callName,
-                    startTime,
-                    timer.Elapsed,
-                    null,
-                    isSuccess);
-            }
-        }
-
-        private async Task WrapAsync(Func<Task> func, string callName)
-        {
-            bool isSuccess = true;
-            var startTime = DateTime.UtcNow;
-            var timer = Stopwatch.StartNew();
-            try
-            {
-                await func();
-            }
-            catch (Exception e)
-            {
-                isSuccess = false;
-                _telemetry.TrackException(e);
-                throw;
-            }
-            finally
-            {
-                timer.Stop();
-                _telemetry.TrackDependency(
-                    _telemetryDependencyType,
-                    _impl.Name,
-                    callName,
-                    callName,
-                    startTime,
-                    timer.Elapsed,
-                    null,
-                    isSuccess);
-            }
-        }
-
-        private void Wrap(Action func, string callName)
-        {
-            bool isSuccess = true;
-            var startTime = DateTime.UtcNow;
-            var timer = Stopwatch.StartNew();
-            try
-            {
-                func();
-            }
-            catch (Exception e)
-            {
-                isSuccess = false;
-                _telemetry.TrackException(e);
-                throw;
-            }
-            finally
-            {
-                timer.Stop();
-                _telemetry.TrackDependency(
-                    _telemetryDependencyType,
-                    _impl.Name,
-                    callName,
-                    callName,
-                    startTime,
-                    timer.Elapsed,
-                    null,
-                    isSuccess);
-            }
-        }
+            => WrapAsync(() => _impl.Count(), Name);
 
         #endregion
     }
