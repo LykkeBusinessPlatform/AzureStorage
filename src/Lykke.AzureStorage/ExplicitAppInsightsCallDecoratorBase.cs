@@ -89,7 +89,7 @@ namespace AzureStorage
             }
         }
 
-        private IOperationHolder<DependencyTelemetry> InitOperation(string name, [CallerMemberName] string caller = "")
+        private IOperationHolder<DependencyTelemetry> InitOperation(string name, string caller)
         {
             var operation = _telemetry.StartOperation<DependencyTelemetry>(caller);
             operation.Telemetry.Type = TrackType;
