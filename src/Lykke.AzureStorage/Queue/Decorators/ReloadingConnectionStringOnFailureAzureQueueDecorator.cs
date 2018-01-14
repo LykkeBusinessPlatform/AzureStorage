@@ -9,6 +9,8 @@ namespace AzureStorage.Queue.Decorators
     {
         protected override Func<bool, Task<IQueueExt>> MakeStorage { get; }
 
+        public string Name => Wrap(x => x.Name);
+
         public ReloadingConnectionStringOnFailureAzureQueueDecorator(Func<bool, Task<IQueueExt>> makeStorage)
         {
             MakeStorage = makeStorage;
