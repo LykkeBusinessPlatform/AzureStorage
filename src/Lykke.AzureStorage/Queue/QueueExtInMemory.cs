@@ -9,7 +9,9 @@ namespace AzureStorage.Queue
     {
         private readonly Queue<object> _queue = new Queue<object>();
 
-		public Task PutRawMessageAsync(string msg)
+        public string Name => nameof(QueueExtInMemory);
+
+        public Task PutRawMessageAsync(string msg)
 		{
 			PutMessage(msg);
 			return Task.CompletedTask;

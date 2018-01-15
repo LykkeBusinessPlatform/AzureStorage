@@ -27,7 +27,10 @@ namespace AzureStorage.Queue
 
     public interface IQueueExt
     {
-		Task PutRawMessageAsync(string msg);
+        /// <summary>Queue name</summary>
+        string Name { get; }
+
+        Task PutRawMessageAsync(string msg);
 		Task<string> PutMessageAsync(object itm);
 
         Task<QueueData> GetMessageAsync();
