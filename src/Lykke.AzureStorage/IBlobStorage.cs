@@ -31,7 +31,7 @@ namespace AzureStorage
         Task<IEnumerable<string>> FindNamesByPrefixAsync(string container, string prefix);
 
         Task<IEnumerable<string>> GetListOfBlobsAsync(string container);
-        Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container);
+        Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container, int? maxResultsCount = null);
 
         Task DelBlobAsync(string blobContainer, string key);
 

@@ -98,8 +98,8 @@ namespace AzureStorage.Blob.Decorators
         public async Task<IEnumerable<string>> GetListOfBlobsAsync(string container) 
             => await _retryService.RetryAsync(async () => await _impl.GetListOfBlobsAsync(container), _onGettingRetryCount);
 
-        public async Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container) 
-            => await _retryService.RetryAsync(async () => await _impl.GetListOfBlobKeysAsync(container), _onGettingRetryCount);
+        public async Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container, int? maxResultsCount = null) 
+            => await _retryService.RetryAsync(async () => await _impl.GetListOfBlobKeysAsync(container, maxResultsCount), _onGettingRetryCount);
 
         public async Task DelBlobAsync(string blobContainer, string key) 
             => await _retryService.RetryAsync(async () => await _impl.DelBlobAsync(blobContainer, key), _onModificationsRetryCount);

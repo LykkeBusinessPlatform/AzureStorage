@@ -218,7 +218,7 @@ namespace AzureStorage.Blob
             return results;
         }
 
-        public async Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container)
+        public async Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container, int? maxResultsCount = null)
         {
             var containerRef = GetContainerReference(container);
 
@@ -226,7 +226,7 @@ namespace AzureStorage.Blob
             var results = new List<string>();
             do
             {
-                var result = await containerRef.ListBlobsSegmentedAsync(null, false, BlobListingDetails.None, null, token, GetRequestOptions(), null);
+                var result = await containerRef.ListBlobsSegmentedAsync(null, false, BlobListingDetails.None, maxResultsCount, token, GetRequestOptions(), null);
                 token = result.ContinuationToken;
                 foreach (var listBlobItem in result.Results.OfType<CloudBlockBlob>())
                 {
@@ -234,7 +234,7 @@ namespace AzureStorage.Blob
                 }
 
                 //Now do something with the blobs
-            } while (token != null);
+            } while (token != null && (maxResultsCount == null || results.Count <= maxResultsCount.Value));
 
             return results;
         }

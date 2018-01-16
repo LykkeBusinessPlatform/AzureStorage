@@ -54,8 +54,8 @@ namespace AzureStorage.Blob.Decorators
         public async Task<IEnumerable<string>> GetListOfBlobsAsync(string container)
             => await WrapAsync(async () => await _impl.GetListOfBlobsAsync(container), container);
 
-        public async Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container)
-            => await WrapAsync(async () => await _impl.GetListOfBlobKeysAsync(container), container);
+        public async Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container, int? maxResultsCount = null)
+            => await WrapAsync(async () => await _impl.GetListOfBlobKeysAsync(container, maxResultsCount), container);
 
         public async Task DelBlobAsync(string container, string key)
             => await WrapAsync(async () => await _impl.DelBlobAsync(container, key), container);
