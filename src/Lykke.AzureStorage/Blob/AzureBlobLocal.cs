@@ -64,7 +64,7 @@ namespace AzureStorage.Blob
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container)
+        public Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container, int? maxResultsCount = null)
         {
             throw new NotImplementedException();
         }
