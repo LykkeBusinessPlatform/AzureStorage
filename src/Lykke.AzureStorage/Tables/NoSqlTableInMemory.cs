@@ -510,6 +510,11 @@ namespace AzureStorage.Tables
             return Task.Run(() => { chunks(this[partitionKey]); });
         }
 
+        public Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<T> GetDataAsync(string partition, string row)
         {
             return Task.FromResult(this[partition, row]);

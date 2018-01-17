@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 
 using AzureStorage.Tables.Decorators;
@@ -18,6 +20,7 @@ using Lykke.SettingsReader;
 
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Newtonsoft.Json;
 
 namespace AzureStorage.Tables
 {
@@ -628,6 +631,27 @@ namespace AzureStorage.Tables
         {
             var query = CompileTableQuery(partitionKey);
             return ExecuteAsync(query, chunks);
+        }
+
+        public async Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
+        {
+            var tableContinuationToken = !string.IsNullOrEmpty(continuationToken)
+                ? JsonConvert.DeserializeObject<TableContinuationToken>(Utils.HexToString(continuationToken))
+                : null;
+            
+
+            var table = await GetTableAsync();
+            var segment = await table.ExecuteQuerySegmentedAsync<T>(rangeQuery, tableContinuationToken, GetRequestOptions(), null);
+            
+            
+            tableContinuationToken = segment.ContinuationToken;
+
+
+            continuationToken = tableContinuationToken != null
+                ? JsonConvert.SerializeObject(tableContinuationToken).StringToHex()
+                : null;
+
+            return (segment, continuationToken);
         }
 
         public Task ScanDataAsync(string partitionKey, Func<IEnumerable<T>, Task> chunk)
