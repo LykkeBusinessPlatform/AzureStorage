@@ -280,6 +280,36 @@ namespace AzureStorage
                     .ToDictionary(pair => pair[0].ToLower(), pair => pair[1]);
         }
 
+        public static async Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync<T>(this INoSQLTableStorage<T> tableStorage, int take, string continuationToken)
+            where T : class, ITableEntity, new()
+        {
+            var rangeQuery = new TableQuery<T>
+            {
+                TakeCount = take
+            };
+            
+
+            return await tableStorage.GetDataWithContinuationTokenAsync(rangeQuery, continuationToken);
+        }
+
+        public static async Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync<T>(this INoSQLTableStorage<T> tableStorage, TableQuery<T> rangeQuery, int take, string continuationToken)
+            where T : class, ITableEntity, new()
+        {
+            rangeQuery.TakeCount = take;
+
+            return await tableStorage.GetDataWithContinuationTokenAsync(rangeQuery, continuationToken);
+        }
+
+        public static async Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync<T>(this INoSQLTableStorage<T> tableStorage, string partitionKey, int take, string continuationToken)
+            where T : class, ITableEntity, new()
+        {
+            var rangeQuery = QueryGenerator<T>.PartitionKeyOnly.GetTableQuery(partitionKey);
+
+            rangeQuery.TakeCount = take;
+
+            return await tableStorage.GetDataWithContinuationTokenAsync(rangeQuery, continuationToken);
+        }
+
         public static class QueryGenerator<T> where T : ITableEntity, new()
         {			
 			private static string ConvertDateTimeToString(DateTime dateTime, bool includeTime = false)

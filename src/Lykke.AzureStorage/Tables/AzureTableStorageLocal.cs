@@ -293,6 +293,11 @@ namespace AzureStorage.Tables
             chunks(data);
         }
 
+        public async Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task ScanDataAsync(string partitionKey, Func<IEnumerable<T>, Task> chunk)
         {
             var data = await GetHttpReqest(partitionKey, null);
