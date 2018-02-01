@@ -12,7 +12,7 @@ var tableStorage = AzureTableStorage<TEntity>.Create(connectionStringManager, "T
 
 ## Using ```AzureTableEntity```
 
-```AzureTabeStorage``` allows you to use types in property of entities, which Azure does not support originally. Moreover, ```AzureTableEntity``` allows you to perform ```InsertOrMerge``` operations correctly, even if your entity contains value-type properties, which is impossible with original ```TableEntity```. To use ```AzureTabeStorage```, you should inherit your entity class from the ```AzureTableEntity```. 
+```AzureTableEntity``` allows you to use types in property of entities, which Azure does not support originally. Moreover, ```AzureTableEntity``` allows you to perform ```InsertOrMerge``` operations correctly, even if your entity contains value-type properties, which is impossible with original ```TableEntity```. To use ```AzureTableEntity```, you should inherit your entity class from the ```AzureTableEntity```. 
 
 ### Type conversion
 
