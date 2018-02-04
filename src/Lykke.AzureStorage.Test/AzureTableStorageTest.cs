@@ -118,7 +118,7 @@ namespace Lykke.AzureStorage.Test
         }
 
         [TestMethod]
-        public async Task Test_that_valid_table_name_doesnt_throw()
+        public void Test_that_valid_table_name_doesnt_throw()
         {
             AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "a1S", new LogToMemory());
             AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), new string('a', 63), new LogToMemory());
