@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AzureStorage.Tables;
 using Microsoft.WindowsAzure.Storage.Table;
 using System.Threading.Tasks;
+using System.Linq;
 using AzureStorage;
 using Common.Log;
 using Lykke.AzureStorage.Test.Mocks;
@@ -12,6 +13,7 @@ namespace Lykke.AzureStorage.Test
     public class TestEntity : TableEntity
     {
         public string FakeField { get; set; }
+        public int Counter { get; set; }
     }
 
     [TestClass]
@@ -116,10 +118,32 @@ namespace Lykke.AzureStorage.Test
         }
 
         [TestMethod]
-        public void Test_that_valid_table_name_doesnt_throw()
+        public async Task Test_that_valid_table_name_doesnt_throw()
         {
             AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), "a1S", new LogToMemory());
             AzureTableStorage<TestEntity>.Create(new ConnStringReloadingManagerMock(""), new string('a', 63), new LogToMemory());
+        }
+
+        [TestMethod]
+        public async Task Verify_InsertAndGenerate_DateTime_RowKey_Increments()
+        {
+            var testEntity = GetTestEntity();
+
+            var storage1 = new NoSqlTableInMemory<TestEntity>();
+
+            for (int i = 0; i < 1000; ++i)
+            {
+                testEntity.Counter = i;
+                await storage1.InsertAndGenerateRowKeyAsDateTimeAsync(testEntity, DateTime.UtcNow);
+            }
+
+            int ct = 0;
+            var allEntities = (await storage1.GetDataAsync()).OrderBy(x => x.RowKey);
+            foreach (var entity in allEntities)
+            {
+                Assert.AreEqual<int>(ct, entity.Counter);
+                ++ct;
+            }
         }
     }
 }
