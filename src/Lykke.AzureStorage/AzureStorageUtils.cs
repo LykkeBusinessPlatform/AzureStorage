@@ -32,7 +32,7 @@ namespace AzureStorage
 
         public static string ToDateTimeMask(this RowKeyDateTimeFormat format)
         {
-            return format == RowKeyDateTimeFormat.Short ? "yyyyMMddHHmmss" : "yyyy-MM-dd HH:mm:ss.ffffff";
+            return format == RowKeyDateTimeFormat.Short ? "yyyyMMddHHmmss" : "yyyy-MM-dd HH:mm:ss.fffffff";
         }
 
         public static string ToDateTimeSuffix(this int value, RowKeyDateTimeFormat format)
