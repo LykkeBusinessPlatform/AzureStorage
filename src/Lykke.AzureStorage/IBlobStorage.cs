@@ -39,5 +39,7 @@ namespace AzureStorage
 
         Task<string> GetMetadataAsync(string container, string key, string metaDataKey);
         Task<IDictionary<string, string>> GetMetadataAsync(string container, string key);
+
+        Task<List<string>> ListBlobsAsync(string container, string path);
     }
 }

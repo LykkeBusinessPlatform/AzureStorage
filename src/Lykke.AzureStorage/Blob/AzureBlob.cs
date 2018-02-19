@@ -132,6 +132,24 @@ namespace AzureStorage.Blob
             return blobRef.ExistsAsync(GetRequestOptions(), null);
         }
 
+        public async Task<List<string>> ListBlobsAsync(string container, string path)
+        {
+            var blobRef = GetContainerReference(container);
+
+            var dir = blobRef.GetDirectoryReference(path);
+
+            BlobContinuationToken continuationToken = null;
+            List<IListBlobItem> results = new List<IListBlobItem>();
+            do
+            {
+                var response = await dir.ListBlobsSegmentedAsync(continuationToken);
+                continuationToken = response.ContinuationToken;
+                results.AddRange(response.Results);
+            } while (continuationToken != null);
+
+            return results.Select(x => x.Uri.LocalPath.Substring(container.Length + 2)).ToList();
+        }
+
         public async Task<DateTime> GetBlobsLastModifiedAsync(string container)
         {
             BlobContinuationToken continuationToken = null;

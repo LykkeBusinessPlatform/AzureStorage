@@ -61,5 +61,8 @@ namespace AzureStorage.Blob.Decorators
 
         public Task<IDictionary<string, string>> GetMetadataAsync(string container, string key)
             => WrapAsync(x => x.GetMetadataAsync(container, key));
+
+        public Task<List<string>> ListBlobsAsync(string container, string path)
+            => WrapAsync(x => x.ListBlobsAsync(container, path));
     }
 }

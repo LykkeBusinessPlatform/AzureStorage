@@ -109,5 +109,8 @@ namespace AzureStorage.Blob.Decorators
 
         public async Task<IDictionary<string, string>> GetMetadataAsync(string container, string key) 
             => await _retryService.RetryAsync(async () => await _impl.GetMetadataAsync(container, key), _onGettingRetryCount);
+
+        public async Task<List<string>> ListBlobsAsync(string container, string path)
+            => await _retryService.RetryAsync(async () => await _impl.ListBlobsAsync(container, path), _onGettingRetryCount);
     }
 }
