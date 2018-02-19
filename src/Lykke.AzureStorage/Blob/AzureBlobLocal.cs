@@ -150,5 +150,10 @@ namespace AzureStorage.Blob
         {
             return Task.FromResult<IDictionary<string, string>>(new Dictionary<string, string>());
         }
+
+        public Task<List<string>> ListBlobsAsync(string container, string path)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

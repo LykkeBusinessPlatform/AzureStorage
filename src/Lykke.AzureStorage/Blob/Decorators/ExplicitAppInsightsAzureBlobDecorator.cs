@@ -66,6 +66,9 @@ namespace AzureStorage.Blob.Decorators
         public async Task<IDictionary<string, string>> GetMetadataAsync(string container, string key)
             => await WrapAsync(async () => await _impl.GetMetadataAsync(container, key), container, "GetMetadataAsync for all keys");
 
+        public async Task<List<string>> ListBlobsAsync(string container, string path)
+            => await WrapAsync(async () => await _impl.ListBlobsAsync(container, path), container);
+
         #endregion
     }
 }
