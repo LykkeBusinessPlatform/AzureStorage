@@ -435,6 +435,46 @@ namespace AzureStorage.Tables
             }
         }
 
+        /// <inheritdoc/>
+        public async Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
+        {
+            while (true)
+            {
+                try
+                {
+                    var table = await GetTableAsync();
+                    var existingEntity = await GetDataAsync(entity.PartitionKey, entity.RowKey);
+
+                    if (existingEntity != null)
+                    {
+                        if (!replaceCondition(existingEntity))
+                        {
+                            return false;
+                        }
+
+                        entity.ETag = existingEntity.ETag;
+
+                        await table.ExecuteAsync(TableOperation.Replace(entity), GetRequestOptions(), null);
+                    }
+                    else
+                    {
+                        await table.ExecuteAsync(TableOperation.Insert(entity), GetRequestOptions(), null);
+                    }
+
+                    return true;
+                }
+                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 412)
+                {
+                }
+                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 409)
+                {
+                }
+                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 404)
+                {
+                }
+            }
+        }
+
         public virtual async Task DeleteAsync(T item)
         {
             var table = await GetTableAsync();
@@ -447,6 +487,34 @@ namespace AzureStorage.Tables
             if (itm != null)
                 await DeleteAsync(itm);
             return itm;
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        {
+            while (true)
+            {
+                try
+                {
+                    var existingEntity = await GetDataAsync(partitionKey, rowKey);
+                    if (existingEntity != null && deleteCondition(existingEntity))
+                    {
+                        var table = await GetTableAsync();
+                        await table.ExecuteAsync(TableOperation.Delete(existingEntity), GetRequestOptions(), null);
+
+                        return true;
+                    }
+
+                    return false;
+                }
+                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 412)
+                {
+                }
+                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 404)
+                {
+                    return false;
+                }
+            }
         }
 
         public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey)

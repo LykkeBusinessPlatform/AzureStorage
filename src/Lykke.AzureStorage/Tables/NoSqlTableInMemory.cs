@@ -305,6 +305,34 @@ namespace AzureStorage.Tables
                 await InsertOrReplaceAsync(entity);
         }
 
+        public async Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
+        {
+            await _lockSlim.WaitAsync();
+            try
+            {
+                var row = GetRow(entity.PartitionKey, entity.RowKey);
+
+                if (row == null)
+                {
+                    PrivateInsert(entity);
+
+                    return true;
+                }
+                else if(replaceCondition(row.Deserialize<T>()))
+                {
+                    row.Replace(entity);
+
+                    return true;
+                }
+
+                return false;
+            }
+            finally
+            {
+                _lockSlim.Release();
+            }
+        }
+
         public Task DeleteAsync(T item)
         {
             return DeleteAsync(item.PartitionKey, item.RowKey);
@@ -339,6 +367,33 @@ namespace AzureStorage.Tables
         {
             await DeleteAsync(partitionKey, rowKey);
             return true;
+        }
+
+        public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        {
+            await _lockSlim.WaitAsync();
+            try
+            {
+                var partition = GetPartition(partitionKey, false);
+
+                if (!partition.Rows.TryGetValue(rowKey, out var rowToDelete))
+                {
+                    return false;
+                }
+
+                if (deleteCondition(rowToDelete.Deserialize<T>()))
+                {
+                    partition.Rows.TryRemove(rowKey, out var _);
+
+                    return true;
+                }
+
+                return false;
+            }
+            finally
+            {
+                _lockSlim.Release();
+            }
         }
 
         public async Task<bool> DeleteAsync()

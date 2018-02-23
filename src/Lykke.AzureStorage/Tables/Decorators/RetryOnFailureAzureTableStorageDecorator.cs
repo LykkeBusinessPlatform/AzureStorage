@@ -154,6 +154,11 @@ namespace AzureStorage.Tables.Decorators
             await _retryService.RetryAsync(async () => await _impl.InsertOrReplaceAsync(items), _onModificationsRetryCount);
         }
 
+        public Task<bool> InsertOrReplaceAsync(TEntity entity, Func<TEntity, bool> replaceCondition)
+        {
+            return _retryService.RetryAsync(() => _impl.InsertOrReplaceAsync(entity, replaceCondition), _onModificationsRetryCount);
+        }
+
         public async Task DeleteAsync(TEntity item)
         {
             await _retryService.RetryAsync(async () => await _impl.DeleteAsync(item), _onModificationsRetryCount);
@@ -167,6 +172,11 @@ namespace AzureStorage.Tables.Decorators
         public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey)
         {
             return await _retryService.RetryAsync(async () => await _impl.DeleteIfExistAsync(partitionKey, rowKey), _onModificationsRetryCount);
+        }
+
+        public Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<TEntity, bool> deleteCondition)
+        {
+            return _retryService.RetryAsync(() => _impl.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition), _onModificationsRetryCount);
         }
 
         public async Task<bool> DeleteAsync()

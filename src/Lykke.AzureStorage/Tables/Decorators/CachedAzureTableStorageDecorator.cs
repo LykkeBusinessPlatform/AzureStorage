@@ -92,6 +92,17 @@ namespace AzureStorage.Tables.Decorators
                 await InsertOrReplaceAsync(entity);
         }
 
+        public async Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
+        {
+            if (await _cache.InsertOrReplaceAsync(entity, replaceCondition))
+            {
+                await _table.InsertOrReplaceAsync(entity);
+                return true;
+            }
+
+            return false;
+        }
+
         public async Task DeleteAsync(T item)
         {
             await _table.DeleteAsync(item);
@@ -121,6 +132,16 @@ namespace AzureStorage.Tables.Decorators
             }
 
             return true;
+        }
+
+        public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        {
+            if (await _cache.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition))
+            {
+                return await _table.DeleteIfExistAsync(partitionKey, rowKey);
+            }
+
+            return false;
         }
 
         public async Task<bool> DeleteAsync()

@@ -88,6 +88,22 @@ namespace AzureStorage
         Task InsertOrReplaceAsync(IEnumerable<T> items);
 
         /// <summary>
+        /// Adds or replaces a row if existing row state satisfies replace condition.
+        /// This method is concurrent safe.
+        /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used.
+        /// </summary>
+        /// <param name="entity">Entity which should be saved</param>
+        /// <param name="replaceCondition">
+        /// Condition to check: whether existing record can be replaced. 
+        /// You should check passed entity state and return true, if 
+        /// the entity can be replaced or return false if the entity can't be replaced.
+        /// </param>
+        /// <returns>
+        /// true - the record has been inserted or replaced, otherwise - false
+        /// </returns>
+        Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition);
+
+        /// <summary>
         /// Deletes row from the table.
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used
         /// </summary>
@@ -102,6 +118,21 @@ namespace AzureStorage
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used
         /// </summary>
         Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey);
+
+        /// <summary>
+        /// Deletes the record if it exists and delete condition is satisfied. 
+        /// This method is concurrent safe.
+        /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used.
+        /// </summary>
+        /// <param name="partitionKey">Record partition key</param>
+        /// <param name="rowKey">Record row key</param>
+        /// <param name="deleteCondition">
+        /// Condition to check: whether the record can be deleted. 
+        /// You should check passed entity state and return true, if 
+        /// the entity can be deleted or return false if the entity can't be deleted.
+        /// </param>
+        /// <returns>true - the record has been delete, otherwise - false</returns>
+        Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition);
 
         /// <summary>
         /// Deletes the table.
