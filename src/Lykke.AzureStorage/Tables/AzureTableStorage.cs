@@ -463,13 +463,10 @@ namespace AzureStorage.Tables
 
                     return true;
                 }
-                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 412)
-                {
-                }
-                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 409)
-                {
-                }
-                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 404)
+                catch (StorageException e) when (
+                    e.RequestInformation.HttpStatusCode == 412 || 
+                    e.RequestInformation.HttpStatusCode == 409 || 
+                    e.RequestInformation.HttpStatusCode == 404)
                 {
                 }
             }
