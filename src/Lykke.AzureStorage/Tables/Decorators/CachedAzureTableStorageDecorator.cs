@@ -7,6 +7,7 @@ using Common.Log;
 using Lykke.AzureStorage.Tables.Paging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage.Table.Protocol;
 
 namespace AzureStorage.Tables.Decorators
 {
@@ -123,12 +124,9 @@ namespace AzureStorage.Tables.Decorators
                 await DeleteAsync(partitionKey, rowKey);
                 await _cache.DeleteAsync(partitionKey, rowKey);
             }
-            catch (StorageException ex)
-            {
-                if (ex.RequestInformation.HttpStatusCode == 404)
-                    return false;
-
-                throw;
+            catch (StorageException ex) when (ex.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
+            { 
+                return false;
             }
 
             return true;

@@ -20,6 +20,7 @@ using Lykke.SettingsReader;
 
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage.Table.Protocol;
 using Newtonsoft.Json;
 
 namespace AzureStorage.Tables
@@ -464,9 +465,9 @@ namespace AzureStorage.Tables
                     return true;
                 }
                 catch (StorageException e) when (
-                    e.RequestInformation.HttpStatusCode == 412 || 
-                    e.RequestInformation.HttpStatusCode == 409 || 
-                    e.RequestInformation.HttpStatusCode == 404)
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.UpdateConditionNotSatisfied || 
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityAlreadyExists || 
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
                 {
                 }
             }
@@ -504,10 +505,10 @@ namespace AzureStorage.Tables
 
                     return false;
                 }
-                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 412)
+                catch (StorageException e) when (e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.UpdateConditionNotSatisfied)
                 {
                 }
-                catch (StorageException e) when (e.RequestInformation.HttpStatusCode == 404)
+                catch (StorageException e) when (e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
                 {
                     return false;
                 }
@@ -520,12 +521,9 @@ namespace AzureStorage.Tables
             {
                 await DeleteAsync(partitionKey, rowKey);
             }
-            catch (StorageException ex)
+            catch (StorageException ex) when (ex.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
             {
-                if (ex.RequestInformation.HttpStatusCode == 404)
-                    return false;
-
-                throw;
+                return false;
             }
 
             return true;
@@ -546,12 +544,9 @@ namespace AzureStorage.Tables
                     _tableCreated = false;
                 }
             }
-            catch (StorageException ex)
+            catch (StorageException ex) when (ex.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
             {
-                if (ex.RequestInformation.HttpStatusCode == 404)
-                    return false;
-
-                throw;
+                return false;
             }
 
             return deleted;
