@@ -7,6 +7,7 @@ using Common.Log;
 using Lykke.AzureStorage.Tables.Paging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage.Table.Protocol;
 
 namespace AzureStorage.Tables.Decorators
 {
@@ -92,6 +93,17 @@ namespace AzureStorage.Tables.Decorators
                 await InsertOrReplaceAsync(entity);
         }
 
+        public async Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
+        {
+            if (await _cache.InsertOrReplaceAsync(entity, replaceCondition))
+            {
+                await _table.InsertOrReplaceAsync(entity);
+                return true;
+            }
+
+            return false;
+        }
+
         public async Task DeleteAsync(T item)
         {
             await _table.DeleteAsync(item);
@@ -112,15 +124,22 @@ namespace AzureStorage.Tables.Decorators
                 await DeleteAsync(partitionKey, rowKey);
                 await _cache.DeleteAsync(partitionKey, rowKey);
             }
-            catch (StorageException ex)
-            {
-                if (ex.RequestInformation.HttpStatusCode == 404)
-                    return false;
-
-                throw;
+            catch (StorageException ex) when (ex.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
+            { 
+                return false;
             }
 
             return true;
+        }
+
+        public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        {
+            if (await _cache.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition))
+            {
+                return await _table.DeleteIfExistAsync(partitionKey, rowKey);
+            }
+
+            return false;
         }
 
         public async Task<bool> DeleteAsync()

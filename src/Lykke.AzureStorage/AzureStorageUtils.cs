@@ -243,7 +243,7 @@ namespace AzureStorage
             return result;
         }
 
-
+        [Obsolete("Use InsertOrReplaceAsync(string, string, Func<T, bool>) instead of this method")]
         public static async Task<T> InsertOrModifyAsync<T>(this INoSQLTableStorage<T> tableStorage, string partitionKey,
             string rowKey, Func<T> createNew, Func<T, T> modify)
             where T : class, ITableEntity, new()

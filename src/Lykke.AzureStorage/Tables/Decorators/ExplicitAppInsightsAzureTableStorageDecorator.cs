@@ -68,11 +68,17 @@ namespace AzureStorage.Tables.Decorators
         public Task InsertOrReplaceAsync(IEnumerable<TEntity> items)
             => WrapAsync(() => _impl.InsertOrReplaceAsync(items), Name, "InsertOrReplaceAsync items");
 
+        public Task<bool> InsertOrReplaceAsync(TEntity entity, Func<TEntity, bool> replaceCondition)
+            => WrapAsync(() => _impl.InsertOrReplaceAsync(entity, replaceCondition), Name, "InsertOrReplace with condition");
+
         public Task DeleteAsync(TEntity item)
             => WrapAsync(() => _impl.DeleteAsync(item), Name, "DeleteAsync item");
 
         public Task<TEntity> DeleteAsync(string partitionKey, string rowKey)
             => WrapAsync(() => _impl.DeleteAsync(partitionKey, rowKey), Name, "DeleteAsync [pk, rk]");
+
+        public Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<TEntity, bool> deleteCondition)
+            => WrapAsync(() => _impl.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition), Name, "DeleteIfExist with condition");
 
         public Task<bool> DeleteAsync()
             => WrapAsync(() => _impl.DeleteAsync(), Name, "DeleteAsync table");

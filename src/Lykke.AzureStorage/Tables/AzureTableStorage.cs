@@ -20,6 +20,7 @@ using Lykke.SettingsReader;
 
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage.Table.Protocol;
 using Newtonsoft.Json;
 
 namespace AzureStorage.Tables
@@ -435,6 +436,43 @@ namespace AzureStorage.Tables
             }
         }
 
+        /// <inheritdoc/>
+        public async Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
+        {
+            while (true)
+            {
+                try
+                {
+                    var table = await GetTableAsync();
+                    var existingEntity = await GetDataAsync(entity.PartitionKey, entity.RowKey);
+
+                    if (existingEntity != null)
+                    {
+                        if (!replaceCondition(existingEntity))
+                        {
+                            return false;
+                        }
+
+                        entity.ETag = existingEntity.ETag;
+
+                        await table.ExecuteAsync(TableOperation.Replace(entity), GetRequestOptions(), null);
+                    }
+                    else
+                    {
+                        await table.ExecuteAsync(TableOperation.Insert(entity), GetRequestOptions(), null);
+                    }
+
+                    return true;
+                }
+                catch (StorageException e) when (
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.UpdateConditionNotSatisfied || 
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityAlreadyExists || 
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
+                {
+                }
+            }
+        }
+
         public virtual async Task DeleteAsync(T item)
         {
             var table = await GetTableAsync();
@@ -449,18 +487,43 @@ namespace AzureStorage.Tables
             return itm;
         }
 
+        /// <inheritdoc/>
+        public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        {
+            while (true)
+            {
+                try
+                {
+                    var existingEntity = await GetDataAsync(partitionKey, rowKey);
+                    if (existingEntity != null && deleteCondition(existingEntity))
+                    {
+                        var table = await GetTableAsync();
+                        await table.ExecuteAsync(TableOperation.Delete(existingEntity), GetRequestOptions(), null);
+
+                        return true;
+                    }
+
+                    return false;
+                }
+                catch (StorageException e) when (e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.UpdateConditionNotSatisfied)
+                {
+                }
+                catch (StorageException e) when (e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
+                {
+                    return false;
+                }
+            }
+        }
+
         public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey)
         {
             try
             {
                 await DeleteAsync(partitionKey, rowKey);
             }
-            catch (StorageException ex)
+            catch (StorageException ex) when (ex.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
             {
-                if (ex.RequestInformation.HttpStatusCode == 404)
-                    return false;
-
-                throw;
+                return false;
             }
 
             return true;
@@ -481,12 +544,9 @@ namespace AzureStorage.Tables
                     _tableCreated = false;
                 }
             }
-            catch (StorageException ex)
+            catch (StorageException ex) when (ex.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
             {
-                if (ex.RequestInformation.HttpStatusCode == 404)
-                    return false;
-
-                throw;
+                return false;
             }
 
             return deleted;
