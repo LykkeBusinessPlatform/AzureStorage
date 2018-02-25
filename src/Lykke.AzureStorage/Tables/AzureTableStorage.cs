@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 
 using AzureStorage.Tables.Decorators;
@@ -98,7 +96,6 @@ namespace AzureStorage.Tables
         private readonly bool _createTableAutomatically;
 
         private readonly CloudStorageAccount _cloudStorageAccount;
-        private bool _tableCreated;
         
         private AzureTableStorage(string connectionString, string tableName, TimeSpan? maxExecutionTimeout = null, bool createTableAutomatically = true)
         {
@@ -539,12 +536,9 @@ namespace AzureStorage.Tables
 
                 deleted = await table.DeleteIfExistsAsync();
 
-                if (deleted)
-                {
-                    _tableCreated = false;
-                }
+                AzureTableStorageTablesCreator.InvalidateCreationCache(table);
             }
-            catch (StorageException ex) when (ex.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
+            catch (StorageException ex) when (ex.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.TableNotFound)
             {
                 return false;
             }
@@ -701,7 +695,7 @@ namespace AzureStorage.Tables
             
 
             var table = await GetTableAsync();
-            var segment = await table.ExecuteQuerySegmentedAsync<T>(rangeQuery, tableContinuationToken, GetRequestOptions(), null);
+            var segment = await table.ExecuteQuerySegmentedAsync(rangeQuery, tableContinuationToken, GetRequestOptions(), null);
             
             
             tableContinuationToken = segment.ContinuationToken;
@@ -864,9 +858,11 @@ namespace AzureStorage.Tables
             });
         }
 
-        public async Task CreateTableIfNotExistsAsync()
+        public Task CreateTableIfNotExistsAsync()
         {
-            await CreateAndGetTableIfNotExistsAsync();
+            var table = GetTableReference();
+
+            return AzureTableStorageTablesCreator.EnsureTableIsCreatedAsync(table);
         }
 
         private static OperationContext GetMergeOperationContext()
@@ -886,25 +882,16 @@ namespace AzureStorage.Tables
             return cloudTableClient.GetTableReference(_tableName);
         }
 
-        private async Task<CloudTable> CreateAndGetTableIfNotExistsAsync()
+        private async Task<CloudTable> GetTableAsync()
         {
             var table = GetTableReference();
 
-            await table.CreateIfNotExistsAsync();
-
-            _tableCreated = true;
-
-            return table;
-        }
-
-        private async Task<CloudTable> GetTableAsync()
-        {
-            if (_tableCreated || !_createTableAutomatically)
+            if (_createTableAutomatically)
             {
-                return GetTableReference();
+                await AzureTableStorageTablesCreator.EnsureTableIsCreatedAsync(table);
             }
 
-            return await CreateAndGetTableIfNotExistsAsync();
+            return table;
         }
 
         private async Task ExecuteQueryAsync(TableQuery<T> rangeQuery, Func<T, bool> filter,
