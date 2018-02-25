@@ -17,7 +17,7 @@ namespace AzureStorage.Blob
             _host = host;
         }
 
-        public Stream this[string container, string key] => GetAsync(container, key).Result;       
+        public Stream this[string container, string key] => GetAsync(container, key).GetAwaiter().GetResult();       
 
 		public async Task<string> SaveBlobAsync(string container, string key, Stream bloblStream, bool anonymousAccess = false)
 		{
