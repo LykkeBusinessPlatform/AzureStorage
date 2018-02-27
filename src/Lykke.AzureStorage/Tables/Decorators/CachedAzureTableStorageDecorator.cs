@@ -104,6 +104,17 @@ namespace AzureStorage.Tables.Decorators
             return false;
         }
 
+        public async Task<bool> InsertOrModifyAsync(string partitionKey, string rowKey, Func<T> create, Func<T, bool> modify)
+        {
+            if (await _cache.InsertOrModifyAsync(partitionKey, rowKey, create, modify))
+            {
+                await _table.InsertOrModifyAsync(partitionKey, rowKey, create, modify);
+                return true;
+            }
+
+            return false;
+        }
+
         public async Task DeleteAsync(T item)
         {
             await _table.DeleteAsync(item);

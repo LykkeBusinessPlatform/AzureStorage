@@ -436,6 +436,11 @@ namespace AzureStorage.Tables
         /// <inheritdoc/>
         public async Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
         {
+            if (entity.ETag != null)
+            {
+                throw new ArgumentException("Entity ETag should be null", nameof(entity.ETag));
+            }
+
             while (true)
             {
                 try
@@ -464,6 +469,71 @@ namespace AzureStorage.Tables
                 catch (StorageException e) when (
                     e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.UpdateConditionNotSatisfied || 
                     e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityAlreadyExists || 
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
+                {
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> InsertOrModifyAsync(string partitionKey, string rowKey, Func<T> create, Func<T, bool> modify)
+        {
+            while (true)
+            {
+                try
+                {
+                    var table = await GetTableAsync();
+                    var existingEntity = await GetDataAsync(partitionKey, rowKey);
+                    
+                    if (existingEntity != null)
+                    {
+                        var etag = existingEntity.ETag;
+
+                        if (!modify(existingEntity))
+                        {
+                            return false;
+                        }
+
+                        if (existingEntity.PartitionKey != partitionKey)
+                        {
+                            throw new InvalidOperationException("Partition key of the existing entity can't be changed");
+                        }
+                        if (existingEntity.RowKey != rowKey)
+                        {
+                            throw new InvalidOperationException("Row key of the existing entity can't be changed");
+                        }
+                        if (existingEntity.ETag != etag)
+                        {
+                            throw new InvalidOperationException("ETag of the existing entity can't be changed");
+                        }
+
+                        await table.ExecuteAsync(TableOperation.Replace(existingEntity), GetRequestOptions(), null);
+                    }
+                    else
+                    {
+                        var newEntity = create();
+
+                        if (newEntity.PartitionKey != partitionKey)
+                        {
+                            throw new InvalidOperationException("New entity partition key mismatch");
+                        }
+                        if (newEntity.RowKey != rowKey)
+                        {
+                            throw new InvalidOperationException("New entity row key mismatch");
+                        }
+                        if (newEntity.ETag != null)
+                        {
+                            throw new InvalidOperationException("ETag of the new entity should be null");
+                        }
+
+                        await table.ExecuteAsync(TableOperation.Insert(newEntity), GetRequestOptions(), null);
+                    }
+
+                    return true;
+                }
+                catch (StorageException e) when (
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.UpdateConditionNotSatisfied ||
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityAlreadyExists ||
                     e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
                 {
                 }

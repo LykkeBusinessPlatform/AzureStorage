@@ -90,6 +90,8 @@ namespace AzureStorage
         /// <summary>
         /// Adds or replaces a row if existing row state satisfies replace condition.
         /// This method is concurrent safe.
+        /// This method assumes, that <paramref name="entity"/> is just created (has been not read) 
+        /// and thus doesn't contain ETag.
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used.
         /// </summary>
         /// <param name="entity">Entity which should be saved</param>
@@ -102,6 +104,28 @@ namespace AzureStorage
         /// true - the record has been inserted or replaced, otherwise - false
         /// </returns>
         Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition);
+
+        /// <summary>
+        /// Adds or modifies a row.
+        /// This method is concurrent safe.
+        /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used.
+        /// </summary>
+        /// <param name="partitionKey">Record partition key</param>
+        /// <param name="rowKey">Record row key</param>
+        /// <param name="create">
+        /// This delegate will be called if there is no record with given partition and row keys.
+        /// You should return new entity.
+        /// </param>
+        /// <param name="modify">
+        /// This delegate will be called if record with given partition and row keys is exists.
+        /// Existing entity will be passed to this delegate, you can modify it as you wish except PartitionKey, PowKey and ETag.
+        /// You should check passed entity state, whether it can be replaced and return truereturn true, if entity should be saved, 
+        /// otherwise - you should return false. 
+        /// </param>
+        /// <returns>
+        /// true - the record has been inserted or modified, otherwise - false
+        /// </returns>
+        Task<bool> InsertOrModifyAsync(string partitionKey, string rowKey, Func<T> create, Func<T, bool> modify);
 
         /// <summary>
         /// Deletes row from the table.

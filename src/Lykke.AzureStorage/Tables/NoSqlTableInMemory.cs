@@ -333,6 +333,39 @@ namespace AzureStorage.Tables
             }
         }
 
+        public async Task<bool> InsertOrModifyAsync(string partitionKey, string rowKey, Func<T> create, Func<T, bool> modify)
+        {
+            await _lockSlim.WaitAsync();
+            try
+            {
+                var row = GetRow(partitionKey, rowKey);
+
+                if (row == null)
+                {
+                    PrivateInsert(create());
+
+                    return true;
+                }
+                else
+                {
+                    var entity = row.Deserialize<T>();
+
+                    if (!modify(entity))
+                    {
+                        return false;
+                    }
+
+                    row.Replace(entity);
+                }
+
+                return false;
+            }
+            finally
+            {
+                _lockSlim.Release();
+            }
+        }
+
         public Task DeleteAsync(T item)
         {
             return DeleteAsync(item.PartitionKey, item.RowKey);
