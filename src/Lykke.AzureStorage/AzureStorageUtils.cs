@@ -66,7 +66,7 @@ namespace AzureStorage
             return filter == null ? data : data.Where(filter);
         }
 
-
+        [Obsolete("Use InsertOrReplaceAsync(T, Func<T, bool>) or InsertOrModifyAsync(string, string, Func<T> create, Func<T, bool> modify) instead of this method, according to your requirements")]
         public static async Task<T> ModifyOrCreateAsync<T>(this INoSQLTableStorage<T> tableStorage,
             string partitionKey, string rowKey, Func<T> create, Action<T> update) where T : ITableEntity, new()
         {
@@ -242,34 +242,6 @@ namespace AzureStorage
 
             return result;
         }
-
-        [Obsolete("Use InsertOrReplaceAsync(string, string, Func<T, bool>) instead of this method")]
-        public static async Task<T> InsertOrModifyAsync<T>(this INoSQLTableStorage<T> tableStorage, string partitionKey,
-            string rowKey, Func<T> createNew, Func<T, T> modify)
-            where T : class, ITableEntity, new()
-        {
-            for (var i = 0; i < 100; i++)
-            {
-                try
-                {
-                    var result = await tableStorage.ReplaceAsync(partitionKey,
-                        rowKey, modify);
-
-                    if (result != null)
-                        return result;
-
-                    result = createNew();
-                    await tableStorage.InsertAsync(result);
-                    return result;
-                }
-                catch (Exception)
-                {
-                }
-            }
-
-            throw new Exception("Can not insert or modify entity");
-        }
-
 
         public static Dictionary<string, string> ParseTableStorageConnectionString(this string connString)
         {
