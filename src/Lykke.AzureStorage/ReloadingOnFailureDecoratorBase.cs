@@ -64,7 +64,7 @@ namespace AzureStorage
         {
             try
             {
-                func(GetStorageAsync().Result);
+                func(GetStorageAsync().GetAwaiter().GetResult());
                 return;
             }
             catch (Exception ex)
@@ -75,14 +75,14 @@ namespace AzureStorage
                 }
             }
 
-            func(GetStorageAsync(reload: true).Result);
+            func(GetStorageAsync(reload: true).GetAwaiter().GetResult());
         }
 
         protected T Wrap<T>(Func<TStorage, T> func)
         {
             try
             {
-                return func(GetStorageAsync().Result);
+                return func(GetStorageAsync().GetAwaiter().GetResult());
             }
             catch (Exception ex)
             {
@@ -92,7 +92,7 @@ namespace AzureStorage
                 }
             }
 
-            return func(GetStorageAsync(reload: true).Result);
+            return func(GetStorageAsync(reload: true).GetAwaiter().GetResult());
         }
 
         protected async Task WrapAsync(Func<TStorage, Task> func)

@@ -656,7 +656,7 @@ namespace AzureStorage.Tables
                 var result = new List<T>();
 
                 foreach (var rowKey in rowKeys)
-                    result.AddRange(this.GetDataRowKeyOnlyAsync(rowKey).Result);
+                    result.AddRange(this.GetDataRowKeyOnlyAsync(rowKey).GetAwaiter().GetResult());
 
                 return (IEnumerable<T>)result;
             });

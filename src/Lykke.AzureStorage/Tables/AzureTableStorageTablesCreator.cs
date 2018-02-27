@@ -19,7 +19,7 @@ namespace AzureStorage.Tables
 
         public static async Task EnsureTableIsCreatedAsync(CloudTable table)
         {
-            if (CreatedTables.TryAdd(table.Name, default(byte)))
+            if (CreatedTables.TryAdd(table.Uri.ToString(), default(byte)))
             {
                 await table.CreateIfNotExistsAsync();
             }
@@ -27,7 +27,7 @@ namespace AzureStorage.Tables
 
         public static void InvalidateCreationCache(CloudTable table)
         {
-            CreatedTables.TryRemove(table.Name, out var _);
+            CreatedTables.TryRemove(table.Uri.ToString(), out var _);
         }
     }
 }

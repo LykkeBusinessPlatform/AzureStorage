@@ -145,7 +145,7 @@ namespace AzureStorage
                     partitionKey => tableStorage.WhereAsync(partitionKey, from, to, intervalOption, filter)
                         .ContinueWith(task =>
                         {
-                            lock (result) result.AddRange(task.Result);
+                            lock (result) result.AddRange(task.GetAwaiter().GetResult());
                         }))
                 );
 
@@ -777,7 +777,7 @@ namespace AzureStorage
 			await Task.WhenAll(tasks);
 
 
-			return tasks[0].Result;
+			return tasks[0].GetAwaiter().GetResult();
 		}
     }
 }
