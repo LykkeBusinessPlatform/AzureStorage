@@ -12,14 +12,13 @@ namespace Lykke.AzureStorage.Tables.Entity.Serializers
     [PublicAPI]
     public class JsonStorageValueSerializer : IStorageValueSerializer
     {
-        private readonly JsonSerializer _serializer;
+        private readonly JsonSerializerSettings _settings;
 
         /// <summary>
         /// Json serializer of the user types, when persisting they 
         /// as the part of the table entity <see cref="AzureTableEntity"/>
         /// </summary>
-        public JsonStorageValueSerializer() :
-            this(null)
+        public JsonStorageValueSerializer()
         {
         }
 
@@ -29,29 +28,19 @@ namespace Lykke.AzureStorage.Tables.Entity.Serializers
         /// </summary>
         public JsonStorageValueSerializer(JsonSerializerSettings settings)
         {
-            _serializer = JsonSerializer.Create(settings);
+            _settings = settings;
         }
 
         /// <inheritdoc />
         public string Serialize(object value, Type type)
         {
-            using (var stringWriter = new StringWriter())
-            {
-                _serializer.Serialize(stringWriter, value, type);
-
-                stringWriter.Flush();
-
-                return stringWriter.ToString();
-            }
+            return JsonConvert.SerializeObject(value, type, _settings);
         }
 
         /// <inheritdoc />
         public object Deserialize(string serialized, Type type)
         {
-            using (var stringReader = new StringReader(serialized))
-            {
-                return _serializer.Deserialize(stringReader, type);
-            }
+            return JsonConvert.DeserializeObject(serialized, type, _settings);
         }
     }
 }
