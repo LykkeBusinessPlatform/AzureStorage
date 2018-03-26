@@ -6,10 +6,12 @@ namespace Lykke.AzureStorage.Tables.Entity.Converters
     internal sealed class SerializerStorageValueConverter : IStorageValueConverter
     {
         private readonly IStorageValueSerializer _serializer;
+        private readonly Type _propertyType;
 
-        public SerializerStorageValueConverter(IStorageValueSerializer serializer)
+        public SerializerStorageValueConverter(IStorageValueSerializer serializer, Type propertyType)
         {
             _serializer = serializer;
+            _propertyType = propertyType;
         }
 
         public object ConvertFromStorage(object value)
@@ -21,7 +23,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Converters
 
             if (value is string s)
             {
-                var deserialized = _serializer.Deserialize(s);
+                var deserialized = _serializer.Deserialize(s, _propertyType);
                 if (deserialized == null)
                 {
                     throw new InvalidOperationException($"{nameof(IStorageValueSerializer.Deserialize)} shouldn't return null");
@@ -40,7 +42,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Converters
                 throw new ArgumentNullException(nameof(value));
             }
 
-            var serialized = _serializer.Serialize(value);
+            var serialized = _serializer.Serialize(value, _propertyType);
             if (serialized == null)
             {
                 throw new InvalidOperationException($"{nameof(IStorageValueSerializer.Serialize)} shouldn't return null");

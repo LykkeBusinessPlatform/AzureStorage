@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using System.IO;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace Lykke.AzureStorage.Tables.Entity.Serializers
@@ -19,7 +21,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Serializers
         public JsonStorageValueSerializer()
         {
         }
-        
+
         /// <summary>
         /// Json serializer of the user types, when persisting they 
         /// as the part of the table entity <see cref="AzureTableEntity"/>
@@ -30,15 +32,15 @@ namespace Lykke.AzureStorage.Tables.Entity.Serializers
         }
 
         /// <inheritdoc />
-        public string Serialize(object value)
+        public string Serialize(object value, Type type)
         {
-            return JsonConvert.SerializeObject(value, _settings);
+            return JsonConvert.SerializeObject(value, type, _settings);
         }
 
         /// <inheritdoc />
-        public object Deserialize(string serialized)
+        public object Deserialize(string serialized, Type type)
         {
-            return JsonConvert.DeserializeObject(serialized, _settings);
+            return JsonConvert.DeserializeObject(serialized, type, _settings);
         }
     }
 }

@@ -16,12 +16,12 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
 
         private class ValueSerializerMock : IStorageValueSerializer
         {
-            public string Serialize(object value)
+            public string Serialize(object value, Type type)
             {
                 throw new InvalidOperationException();
             }
 
-            public object Deserialize(string serialized)
+            public object Deserialize(string serialized, Type type)
             {
                 throw new InvalidOperationException();
             }
@@ -29,12 +29,12 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
 
         private class OneMoreValueSerializerMock : IStorageValueSerializer
         {
-            public string Serialize(object value)
+            public string Serialize(object value, Type type)
             {
                 throw new InvalidOperationException();
             }
 
-            public object Deserialize(string serialized)
+            public object Deserialize(string serialized, Type type)
             {
                 throw new InvalidOperationException();
             }
@@ -42,12 +42,12 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.Metamodel.Providers
 
         private class AnotherValueSerializerMock : IStorageValueSerializer
         {
-            public string Serialize(object value)
+            public string Serialize(object value, Type type)
             {
                 throw new InvalidOperationException();
             }
 
-            public object Deserialize(string serialized)
+            public object Deserialize(string serialized, Type type)
             {
                 throw new InvalidOperationException();
             }
