@@ -59,7 +59,7 @@ namespace Lykke.AzureStorage.Tables.Entity.PropertyAccess.Factories
             var serializer = _metamodel.TryGetSerializer(property);
             if (serializer != null)
             {
-                return new SerializerStorageValueConverter(serializer);
+                return new SerializerStorageValueConverter(serializer, propertyType);
             }
 
             // If type has not default TypeConverter, which can converts to/from the string, use TypeDescriptorConverter

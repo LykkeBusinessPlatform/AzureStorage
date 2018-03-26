@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace Lykke.AzureStorage.Tables.Entity.Serializers
 {
@@ -19,8 +20,9 @@ namespace Lykke.AzureStorage.Tables.Entity.Serializers
         /// </p>
         /// </summary>
         /// <param name="value">Value to serialize. Can't be null</param>
+        /// <param name="type">Type of object being serialized</param>
         /// <returns>Serialized <paramref name="value"/> representation of the value. Can't be null</returns>
-        string Serialize(object value);
+        string Serialize(object value, Type type);
 
         /// <summary>
         /// <p>
@@ -32,7 +34,8 @@ namespace Lykke.AzureStorage.Tables.Entity.Serializers
         /// </p>
         /// </summary>
         /// <param name="serialized">Serialized representation of the value. Can't be null</param>
+        /// <param name="type">Type of object being deserialized</param>
         /// <returns>Original type value. Can't be null</returns>
-        object Deserialize(string serialized);
+        object Deserialize(string serialized, Type type);
     }
 }
