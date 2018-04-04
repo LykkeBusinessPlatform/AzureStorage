@@ -9,7 +9,17 @@ namespace AzureStorage.Blob
 {
     internal static class BlobInMemoryHelper
     {
+        public static void AddOrReplace(this Dictionary<string, BlobAttributes> blob, string key, BlobAttributes data)
+        {
+            AddOrReplace<BlobAttributes>(blob, key, data);
+        }
+
         public static void AddOrReplace(this Dictionary<string, byte[]> blob, string key, byte[] data)
+        {
+            AddOrReplace<byte[]>(blob, key, data);
+        }
+
+        private static void AddOrReplace<T>(IDictionary<string, T> blob, string key, T data)
         {
             if (blob.ContainsKey(key))
             {
@@ -31,11 +41,19 @@ namespace AzureStorage.Blob
         }
     }
 
+    internal class BlobAttributes
+    {
+        public IDictionary<string, string> Metadata { get; internal set; } = new Dictionary<string, string>();
+    }
+
 
     public class AzureBlobInMemory : IBlobStorage
     {
         private readonly Dictionary<string, Dictionary<string, byte[]>> _blobs =
             new Dictionary<string, Dictionary<string, byte[]>>();
+
+        private readonly Dictionary<string, Dictionary<string, BlobAttributes>> _blobsAttributes =
+            new Dictionary<string, Dictionary<string, BlobAttributes>>();
 
 
         private readonly object _lockObject = new object();
@@ -50,6 +68,15 @@ namespace AzureStorage.Blob
             return _blobs[container];
         }
 
+        private Dictionary<string, BlobAttributes> GetBlobAttributes(string container)
+        {
+            if (!_blobsAttributes.ContainsKey(container))
+                _blobsAttributes.Add(container, new Dictionary<string, BlobAttributes>());
+
+
+            return _blobsAttributes[container];
+        }
+
         public void SaveBlob(string container, string key, Stream bloblStream)
         {
             lock (_lockObject)
@@ -62,10 +89,25 @@ namespace AzureStorage.Blob
 			return Task.FromResult(key);
 		}
 
-	    public Task SaveBlobAsync(string container, string key, byte[] blob)
+        public Task SaveBlobAsync(string container, string key, byte[] blob)
+        {
+            return SaveBlobAsync(container, key, blob, null);
+        }
+
+        public Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata)
         {
             lock (_lockObject)
+            {
                 GetBlob(container).AddOrReplace(key, blob);
+
+                if (metadata == null) return Task.FromResult(0);
+                var blobAttributes = new BlobAttributes
+                {
+                    Metadata = (IDictionary<string, string>) metadata
+                };
+                GetBlobAttributes(container).Add(key, blobAttributes);
+            }
+
             return Task.FromResult(0);
         }
 
@@ -158,7 +200,13 @@ namespace AzureStorage.Blob
 
         public Task<string> GetMetadataAsync(string container, string key, string metaDataKey)
         {
-            return Task.FromResult<string>(null);
+            lock (_lockObject)
+            {
+                if (!GetBlobAttributes(container).ContainsKey(key)) return Task.FromResult<string>(null);
+
+                var metadata = GetBlobAttributes(container)[key].Metadata;
+                return Task.FromResult<string>(metadata.ContainsKey(metaDataKey) ? metadata[metaDataKey] : null);
+            }
         }
 
         public Task<IDictionary<string, string>> GetMetadataAsync(string container, string key)

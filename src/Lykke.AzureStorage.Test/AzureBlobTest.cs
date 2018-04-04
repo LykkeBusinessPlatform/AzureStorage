@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace Lykke.AzureStorage.Test
     {
         private IBlobStorage _testBlob;
         private string _blobContainer = "LykkeAzureBlobTest";
+        private const string BlobName = "BlobName";
 
 
         [TestInitialize]
@@ -34,19 +36,29 @@ namespace Lykke.AzureStorage.Test
         [TestMethod]
         public async Task AzureBlob_CheckInsert()
         {
-            const string blobName = "Key";
-
             var data = new byte[] { 0x0, 0xff };
 
-            await _testBlob.SaveBlobAsync(_blobContainer, blobName, new MemoryStream(data));
+            await _testBlob.SaveBlobAsync(_blobContainer, BlobName, new MemoryStream(data));
 
-            using (var result = await _testBlob.GetAsync(_blobContainer, blobName))
+            using (var result = await _testBlob.GetAsync(_blobContainer, BlobName))
             using (var ms = new MemoryStream())
             {
                 result.CopyTo(ms);
 
                 CollectionAssert.AreEquivalent(data, ms.ToArray());
             }
+        }
+        
+        [TestMethod]
+        public async Task AzureBlob_CheckMetadata()
+        {
+            var data = new byte[] { 0x0, 0xff };
+            var metadata = new Dictionary<string, string> {{"key", "value"}};
+
+            await _testBlob.SaveBlobAsync(_blobContainer, BlobName, data, metadata);
+
+            var metaValue = await _testBlob.GetMetadataAsync(_blobContainer, BlobName, metadata.Keys.First());
+            Assert.AreEqual(metaValue, metadata.Values.First());
         }
 
         [TestMethod]

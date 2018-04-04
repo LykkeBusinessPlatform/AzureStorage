@@ -16,6 +16,15 @@ namespace AzureStorage
 
         Task SaveBlobAsync(string container, string key, byte[] blob);
 
+        /// <summary>
+        /// Save array of data to container with metadata
+        /// </summary>
+        /// <param name="container">Container name</param>
+        /// <param name="key">Key</param>
+        /// <param name="blob">Array of data</param>
+        /// <param name="metadata">Metadata to be saved additionally in blob storage</param>
+        Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata);
+
         Task<bool> HasBlobAsync(string container, string key);
 
         Task<bool> CreateContainerIfNotExistsAsync(string container);
