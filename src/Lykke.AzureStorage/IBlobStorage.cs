@@ -14,7 +14,7 @@ namespace AzureStorage
         /// <param name="anonymousAccess">Anonymous access</param>
         Task<string> SaveBlobAsync(string container, string key, Stream bloblStream, bool anonymousAccess = false);
 
-        Task SaveBlobAsync(string container, string key, byte[] blob);
+        Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata = null);
 
         Task<bool> HasBlobAsync(string container, string key);
 

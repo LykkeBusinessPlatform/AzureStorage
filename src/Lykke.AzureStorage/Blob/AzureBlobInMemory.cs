@@ -62,7 +62,7 @@ namespace AzureStorage.Blob
 			return Task.FromResult(key);
 		}
 
-	    public Task SaveBlobAsync(string container, string key, byte[] blob)
+	    public Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata = null)
         {
             lock (_lockObject)
                 GetBlob(container).AddOrReplace(key, blob);

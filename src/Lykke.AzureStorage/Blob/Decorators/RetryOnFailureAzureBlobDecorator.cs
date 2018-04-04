@@ -71,8 +71,8 @@ namespace AzureStorage.Blob.Decorators
         public async Task<string> SaveBlobAsync(string container, string key, Stream bloblStream, bool anonymousAccess = false) 
             => await _retryService.RetryAsync(async () => await _impl.SaveBlobAsync(container, key, bloblStream, anonymousAccess), _onModificationsRetryCount);
 
-        public async Task SaveBlobAsync(string container, string key, byte[] blob) 
-            => await _retryService.RetryAsync(async () => await _impl.SaveBlobAsync(container, key, blob), _onModificationsRetryCount);
+        public async Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata = null) 
+            => await _retryService.RetryAsync(async () => await _impl.SaveBlobAsync(container, key, blob, metadata), _onModificationsRetryCount);
 
         public async Task<bool> HasBlobAsync(string container, string key) 
             => await _retryService.RetryAsync(async () => await _impl.HasBlobAsync(container, key), _onGettingRetryCount);

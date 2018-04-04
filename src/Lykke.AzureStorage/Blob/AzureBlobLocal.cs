@@ -24,7 +24,7 @@ namespace AzureStorage.Blob
 			await PostHttpReqest(container, key, bloblStream.ToBytes());
 			return key;
 		}
-		public Task SaveBlobAsync(string container, string key, byte[] blob)
+		public Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata = null)
         {
             return PostHttpReqest(container, key, blob);
         }

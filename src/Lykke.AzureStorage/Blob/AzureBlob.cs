@@ -103,15 +103,23 @@ namespace AzureStorage.Blob
             return containerRef.GetBlockBlobReference(key);
         }
 
-        public async Task SaveBlobAsync(string container, string key, byte[] blob)
+        public async Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata = null)
         {
             var blockBlob = await GetBlockBlobReferenceAsync(container, key, createIfNotExists: true);
 
             var mimeType = ContentTypesHelper.GetContentType(key);
-
+            
             if (mimeType != null)
             {
                 blockBlob.Properties.ContentType = mimeType;
+            }
+
+            if (metadata != null)
+            {
+                foreach (var keyValuePair in metadata)
+                {
+                    blockBlob.Metadata[keyValuePair.Key] = keyValuePair.Value;
+                }
             }
 
             await blockBlob.UploadFromByteArrayAsync(blob, 0, blob.Length, null, GetRequestOptions(), null);
