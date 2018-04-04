@@ -27,8 +27,11 @@ namespace AzureStorage.Blob.Decorators
         public async Task<string> SaveBlobAsync(string container, string key, Stream bloblStream, bool anonymousAccess = false)
             => await WrapAsync(async () => await _impl.SaveBlobAsync(container, key, bloblStream, anonymousAccess), container, "SaveBlobAsync from Stream");
 
-        public async Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata = null)
-            => await WrapAsync(async () => await _impl.SaveBlobAsync(container, key, blob, metadata), container, "SaveBlobAsync from array");
+        public async Task SaveBlobAsync(string container, string key, byte[] blob)
+            => await WrapAsync(async () => await _impl.SaveBlobAsync(container, key, blob), container, "SaveBlobAsync from array");
+
+        public async Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata)
+            => await WrapAsync(async () => await _impl.SaveBlobAsync(container, key, blob, metadata), container, "SaveBlobAsync from array with metadata");
         
         public async Task<bool> HasBlobAsync(string container, string key)
             => await WrapAsync(async () => await _impl.HasBlobAsync(container, key), container);

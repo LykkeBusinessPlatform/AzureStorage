@@ -103,7 +103,12 @@ namespace AzureStorage.Blob
             return containerRef.GetBlockBlobReference(key);
         }
 
-        public async Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata = null)
+        public async Task SaveBlobAsync(string container, string key, byte[] blob)
+        {
+            await SaveBlobAsync(container, key, blob, null);
+        }
+
+        public async Task SaveBlobAsync(string container, string key, byte[] blob, IReadOnlyDictionary<string, string> metadata)
         {
             var blockBlob = await GetBlockBlobReferenceAsync(container, key, createIfNotExists: true);
 
