@@ -16,7 +16,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel
         
         static EntityMetamodel()
         {
-            Instance = EntityMetamodelImpl.Empty;
+            Instance = new EntityMetamodelImpl(new AnnotationsBasedMetamodelProvider());
         }
 
         /// <summary>
