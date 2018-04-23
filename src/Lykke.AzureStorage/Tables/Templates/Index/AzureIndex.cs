@@ -145,9 +145,6 @@ namespace AzureStorage.Tables.Templates.Index
 		public static Task<IEnumerable<T>> GetDataAsync<T>(this INoSQLTableStorage<T> tableStorage,
 				 IEnumerable<IAzureIndex> indices, int pieces = 15, Func<T, bool> filter = null) where T : ITableEntity, new()
 		{
-            if (!indices.Any())
-                return Task.FromResult(Enumerable.Empty<T>());
-
             return tableStorage.GetDataAsync(indices.Select(x => x.ToTuple()), pieces, filter);
         }
 
