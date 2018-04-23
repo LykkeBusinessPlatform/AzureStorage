@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
+using Lykke.AzureStorage.Tables;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureStorage.Tables.Templates.Index
@@ -126,11 +128,6 @@ namespace AzureStorage.Tables.Templates.Index
 
 	public static class AzureIndexUtils
 	{
-	    public static Tuple<string, string> ToTuple(this IAzureIndex src)
-	    {
-	        return Tuple.Create(src.PrimaryPartitionKey, src.PrimaryRowKey);
-	    }
-
 		public static Task<T> DeleteAsync<T>(this INoSQLTableStorage<T> tableStorage, IAzureIndex index) where T : ITableEntity, new()
 		{
 			return tableStorage.DeleteAsync(index.PrimaryPartitionKey, index.PrimaryRowKey);
@@ -145,14 +142,13 @@ namespace AzureStorage.Tables.Templates.Index
         /// <param name="pieces"></param>
         /// <param name="filter"></param>
         /// <returns></returns>
-		public static async Task<IEnumerable<T>> GetDataAsync<T>(this INoSQLTableStorage<T> tableStorage,
+		public static Task<IEnumerable<T>> GetDataAsync<T>(this INoSQLTableStorage<T> tableStorage,
 				 IEnumerable<IAzureIndex> indices, int pieces = 15, Func<T, bool> filter = null) where T : ITableEntity, new()
 		{
-            var idx = indices.ToArray();
-            if (idx.Length == 0)
-                return new T[0];
+            if (!indices.Any())
+                return Task.FromResult(Enumerable.Empty<T>());
 
-            return await tableStorage.GetDataAsync(idx.Select(x => x.ToTuple()), pieces, filter);
+            return tableStorage.GetDataAsync(indices.Select(x => x.ToTuple()), pieces, filter);
         }
 
 		public static async Task<T> FindByIndex<T>(this INoSQLTableStorage<AzureIndex> tableIndex,
@@ -165,12 +161,12 @@ namespace AzureStorage.Tables.Templates.Index
 			return await tableStorage.GetDataAsync(indexEntity);
 		}
 
-		public static async Task<T> GetDataAsync<T>(this INoSQLTableStorage<T> tableStorage, IAzureIndex index) where T : class, ITableEntity, new()
+		public static Task<T> GetDataAsync<T>(this INoSQLTableStorage<T> tableStorage, IAzureIndex index) where T : class, ITableEntity, new()
 		{
-			if (index == null)
-				return null;
+		    if (index == null)
+		        return Task.FromResult<T>(null);
 
-			return await tableStorage.GetDataAsync(index.PrimaryPartitionKey, index.PrimaryRowKey);
+			return tableStorage.GetDataAsync(index.PrimaryPartitionKey, index.PrimaryRowKey);
 		}
 
 		public static async Task<T> GetDataAsync<T>(this INoSQLTableStorage<T> tableStorage, INoSQLTableStorage<AzureIndex> indexTableStorage,
@@ -186,12 +182,12 @@ namespace AzureStorage.Tables.Templates.Index
 			return await tableStorage.ReplaceAsync(indexEntity, action);
 		}
 
-		public static async Task<T> ReplaceAsync<T>(this INoSQLTableStorage<T> tableStorage, IAzureIndex index, Func<T, T> action) where T : class, ITableEntity, new()
+		public static Task<T> ReplaceAsync<T>(this INoSQLTableStorage<T> tableStorage, IAzureIndex index, Func<T, T> action) where T : class, ITableEntity, new()
 		{
-			if (index == null)
-				return null;
+		    if (index == null)
+		        return Task.FromResult<T>(null);
 
-			return await tableStorage.ReplaceAsync(index.PrimaryPartitionKey, index.PrimaryRowKey, action);
+			return tableStorage.ReplaceAsync(index.PrimaryPartitionKey, index.PrimaryRowKey, action);
 		}
 
 		/// <summary>
