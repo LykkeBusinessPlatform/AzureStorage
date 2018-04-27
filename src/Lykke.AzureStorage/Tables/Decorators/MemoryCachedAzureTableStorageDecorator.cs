@@ -7,6 +7,7 @@ using Common.Log;
 using Lykke.AzureStorage.Tables.Paging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage.Table.Protocol;
 
 namespace AzureStorage.Tables.Decorators
 {
@@ -17,7 +18,7 @@ namespace AzureStorage.Tables.Decorators
     internal class MemoryCachedAzureTableStorageDecorator<T> : INoSQLTableStorage<T> where T : class, ITableEntity, new()
     {
         public string Name => _table.Name;
-        
+
         private readonly INoSQLTableStorage<T> _table;
         private readonly NoSqlTableInMemory<T> _cache;
 
@@ -60,6 +61,12 @@ namespace AzureStorage.Tables.Decorators
             return result;
         }
 
+        public async Task ReplaceAsync(T entity)
+        {
+            await _table.ReplaceAsync(entity);
+            await _cache.ReplaceAsync(entity);
+        }
+
         public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
         {
             var result = await _table.MergeAsync(partitionKey, rowKey, item);
@@ -86,6 +93,28 @@ namespace AzureStorage.Tables.Decorators
                 await InsertOrReplaceAsync(entity);
         }
 
+        public async Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
+        {
+            if (await _cache.InsertOrReplaceAsync(entity, replaceCondition))
+            {
+                await _table.InsertOrReplaceAsync(entity);
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<bool> InsertOrModifyAsync(string partitionKey, string rowKey, Func<T> create, Func<T, bool> modify)
+        {
+            if (await _cache.InsertOrModifyAsync(partitionKey, rowKey, create, modify))
+            {
+                await _table.InsertOrModifyAsync(partitionKey, rowKey, create, modify);
+                return true;
+            }
+
+            return false;
+        }
+
         public async Task DeleteAsync(T item)
         {
             await _table.DeleteAsync(item);
@@ -106,15 +135,22 @@ namespace AzureStorage.Tables.Decorators
                 await DeleteAsync(partitionKey, rowKey);
                 await _cache.DeleteAsync(partitionKey, rowKey);
             }
-            catch (StorageException ex)
+            catch (StorageException ex) when (ex.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
             {
-                if (ex.RequestInformation.HttpStatusCode == 404)
-                    return false;
-
-                throw;
+                return false;
             }
 
             return true;
+        }
+
+        public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        {
+            if (await _cache.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition))
+            {
+                return await _table.DeleteIfExistAsync(partitionKey, rowKey);
+            }
+
+            return false;
         }
 
         public async Task<bool> DeleteAsync()
@@ -200,6 +236,9 @@ namespace AzureStorage.Tables.Decorators
 
         public Task GetDataByChunksAsync(string partitionKey, Action<IEnumerable<T>> chunks)
             => _cache.GetDataByChunksAsync(partitionKey, chunks);
+
+        public Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
+            => _table.GetDataWithContinuationTokenAsync(rangeQuery, continuationToken);
 
         public Task ScanDataAsync(string partitionKey, Func<IEnumerable<T>, Task> chunk)
             => _cache.ScanDataAsync(partitionKey, chunk);

@@ -77,6 +77,17 @@ namespace AzureStorage.Tables.Decorators
             return _storage.CreateTableIfNotExistsAsync();
         }
 
+        public async Task<bool> InsertOrModifyAsync(string partitionKey, string rowKey, Func<T> create, Func<T, bool> modify)
+        {
+            var result = await _storage.InsertOrModifyAsync(partitionKey, rowKey, create, modify);
+
+            if (!result) return false;
+
+            await TrySyncWithCacheAsync(() => _cache.InsertOrModifyAsync(partitionKey, rowKey, create, modify));
+
+            return true;
+        }
+
         public async Task DeleteAsync(T item)
         {
             await _storage.DeleteAsync(item);
@@ -91,6 +102,17 @@ namespace AzureStorage.Tables.Decorators
             await TrySyncWithCacheAsync(() => _cache.DeleteAsync(partitionKey, rowKey));
 
             return deletedItem;
+        }
+
+        public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        {
+            var result = await _storage.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition);
+
+            if (!result) return false;
+
+            await TrySyncWithCacheAsync(() => _cache.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition));
+
+            return true;
         }
 
         public async Task<bool> DeleteAsync()
@@ -256,6 +278,12 @@ namespace AzureStorage.Tables.Decorators
             }
         }
 
+        public Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
+        {
+            // todo: cache?
+            return _storage.GetDataWithContinuationTokenAsync(rangeQuery, continuationToken);
+        }
+
         public async Task<IEnumerable<T>> GetDataRowKeysOnlyAsync(IEnumerable<string> rowKeys)
         {
             var cacheResult = await TryGetFromCacheAsync(() => _cache.GetDataRowKeysOnlyAsync(rowKeys));
@@ -330,6 +358,17 @@ namespace AzureStorage.Tables.Decorators
             await TrySyncWithCacheAsync(() => _cache.InsertOrReplaceAsync(list));
         }
 
+        public async Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
+        {
+            var result = await _storage.InsertOrReplaceAsync(entity, replaceCondition);
+
+            if (!result) return false;
+
+            await TrySyncWithCacheAsync(() => _cache.InsertOrReplaceAsync(entity, replaceCondition));
+
+            return true;
+        }
+
         public async Task InsertOrReplaceBatchAsync(IEnumerable<T> entities)
         {
             var list = entities.ToList();
@@ -337,6 +376,13 @@ namespace AzureStorage.Tables.Decorators
             await _storage.InsertOrReplaceBatchAsync(list);
 
             await TrySyncWithCacheAsync(() => _cache.InsertOrReplaceBatchAsync(list));
+        }
+
+        public async Task ReplaceAsync(T entity)
+        {
+            await _storage.ReplaceAsync(entity);
+
+            await TrySyncWithCacheAsync(() => _cache.ReplaceAsync(entity));
         }
 
         public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)

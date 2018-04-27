@@ -88,6 +88,11 @@ namespace AzureStorage.Tables.Decorators
             return await _storage.ReplaceAsync(partitionKey, rowKey, item);
         }
 
+        public Task ReplaceAsync(T entity)
+        {
+            return _storage.ReplaceAsync(entity);
+        }
+
         public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
         {
             return await _storage.MergeAsync(partitionKey, rowKey, item);
@@ -108,6 +113,16 @@ namespace AzureStorage.Tables.Decorators
             await _storage.InsertOrReplaceAsync(items);
         }
 
+        public Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
+        {
+            return _storage.InsertOrReplaceAsync(entity, replaceCondition);
+        }
+
+        public Task<bool> InsertOrModifyAsync(string partitionKey, string rowKey, Func<T> create, Func<T, bool> modify)
+        {
+            return _storage.InsertOrModifyAsync(partitionKey, rowKey, create, modify);
+        }
+
         public async Task DeleteAsync(T item)
         {
             await _storage.DeleteAsync(item);
@@ -121,6 +136,11 @@ namespace AzureStorage.Tables.Decorators
         public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey)
         {
             return await _storage.DeleteIfExistAsync(partitionKey, rowKey);
+        }
+
+        public Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        {
+            return _storage.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition);
         }
 
         public async Task<bool> DeleteAsync()
@@ -196,6 +216,11 @@ namespace AzureStorage.Tables.Decorators
         public async Task GetDataByChunksAsync(string partitionKey, Action<IEnumerable<T>> chunks)
         {
             await _storage.GetDataByChunksAsync(partitionKey, chunks);
+        }
+
+        public Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
+        {
+            return _storage.GetDataWithContinuationTokenAsync(rangeQuery, continuationToken);
         }
 
         public async Task ScanDataAsync(string partitionKey, Func<IEnumerable<T>, Task> chunk)

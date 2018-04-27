@@ -253,6 +253,11 @@ namespace AzureStorage.Tables.Redis
             return newValue;
         }
 
+        public Task ReplaceAsync(T entity)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
         {
             return await ReplaceAsync(partitionKey, rowKey, item);
@@ -279,6 +284,16 @@ namespace AzureStorage.Tables.Redis
             }
         }
 
+        public Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> InsertOrModifyAsync(string partitionKey, string rowKey, Func<T> create, Func<T, bool> modify)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task DeleteAsync(T item)
         {
             await _cache.RemoveAsync(GetCacheKey(item));
@@ -296,6 +311,11 @@ namespace AzureStorage.Tables.Redis
         {
             var item = await DeleteAsync(partitionKey, rowKey);
             return item != null;
+        }
+
+        public Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<bool> DeleteAsync()
@@ -425,6 +445,11 @@ namespace AzureStorage.Tables.Redis
         {
             var items = await GetDataAsync(partitionKey);
             chunks(items);
+        }
+
+        public Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task ScanDataAsync(string partitionKey, Func<IEnumerable<T>, Task> chunk)
