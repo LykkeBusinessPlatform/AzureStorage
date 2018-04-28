@@ -2,7 +2,7 @@
 
 namespace AzureStorage.Tables.Redis
 {
-    public class AzureRedisSettings : IAzureRedisSettings
+    public class AzureRedisSettings
     {
         public TimeSpan? AbsoluteExpirationRelativeToNow { get; set; }
         public TimeSpan? SlidingExpiration { get; set; }

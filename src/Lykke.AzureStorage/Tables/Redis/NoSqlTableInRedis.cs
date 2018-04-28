@@ -14,55 +14,47 @@ namespace AzureStorage.Tables.Redis
 {
     public class NoSqlTableInRedis<T> : INoSQLTableStorage<T> where T : class, ITableEntity, new()
     {
-        #region fields
+        private const int CachePageSize = 100;
 
         private readonly IDistributedCache _cache;
         private readonly IDatabase _database;
         private readonly ILog _log;
         private readonly DistributedCacheEntryOptions _options;
         private readonly IServer _redisServer;
-        private readonly string _offset;
-
-        #endregion
-
-        #region consts
-
-        private const int CachePageSize = 100;
-
-        #endregion
+        private readonly string _tableName;
 
         private static class Patterns
         {
-            public static string GetAll(string offset)
+            public static string GetAll(string tableName)
             {
-                return $":{offset}:*";
+                return $":{tableName}:*";
             }
 
-            public static string GetPartition(string offset, string partitionKey)
+            public static string GetPartition(string tableName, string partitionKey)
             {
-                return $":{offset}:{partitionKey}:*";
+                return $":{tableName}:{partitionKey}:*";
             }
 
-            public static string GetKey(string offset, string partitionKey, string rowKey)
+            public static string GetKey(string tableName, string partitionKey, string rowKey)
             {
-                return $":{offset}:{partitionKey}:{rowKey}";
+                return $":{tableName}:{partitionKey}:{rowKey}";
             }
         }
 
         public NoSqlTableInRedis(
-            IDistributedCache cache, 
-            IDatabase database, 
-            IServer redisServer, 
-            INoSqlTableInRedisSettings settings, 
+            IDistributedCache cache,
+            IDatabase database,
+            IServer redisServer,
+            NoSqlTableInRedisSettings settings,
             ILog log)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _database = database ?? throw new ArgumentNullException(nameof(database));
             _redisServer = redisServer ?? throw new ArgumentNullException(nameof(redisServer));
             _log = log ?? throw new ArgumentNullException(nameof(log));
-            _offset = settings?.TableName;
+            _tableName = settings?.TableName;
 
-            if (string.IsNullOrWhiteSpace(_offset))
+            if (string.IsNullOrWhiteSpace(_tableName))
                 throw new ArgumentNullException(nameof(settings.TableName));
 
             _options = new DistributedCacheEntryOptions
@@ -80,7 +72,7 @@ namespace AzureStorage.Tables.Redis
 
             while (true)
             {
-                var batchKeys = _redisServer.Keys(pattern: Patterns.GetAll(_offset), pageOffset: pageOffset, pageSize: CachePageSize).ToList();
+                var batchKeys = _redisServer.Keys(pattern: Patterns.GetAll(_tableName), pageOffset: pageOffset, pageSize: CachePageSize).ToList();
 
                 if (!batchKeys.Any()) break;
 
@@ -101,7 +93,7 @@ namespace AzureStorage.Tables.Redis
             batch.Execute();
             var values = await task;
 
-            return (await GetEntities(values)).Where(filter);
+            return (await DeserializeMany(values)).Where(filter);
         }
 
         private async Task ClearCache()
@@ -122,33 +114,33 @@ namespace AzureStorage.Tables.Redis
 
         private string GetCacheKey(string partitionKey, string rowKey)
         {
-            return Patterns.GetKey(_offset, partitionKey, rowKey);
+            return Patterns.GetKey(_tableName, partitionKey, rowKey);
         }
 
         private async Task<T> GetEntityFromCache(string partitionKey, string rowKey)
         {
-            var key = Patterns.GetKey(_offset, partitionKey, rowKey);
-            return await GetEntityFromCache(key);
+            var key = Patterns.GetKey(_tableName, partitionKey, rowKey);
+            return await GetEntity(key);
         }
 
-        private async Task<T> GetEntityFromCache(string cacheKey)
+        private async Task<T> GetEntity(string cacheKey)
         {
             var entityJson = await _cache.GetStringAsync(cacheKey);
 
-            return await GetEntity(entityJson);
+            return await Deserialize(entityJson);
         }
 
-        private async Task<IEnumerable<T>> GetEntities(IEnumerable<RedisValue> values)
+        private async Task<IEnumerable<T>> DeserializeMany(IEnumerable<RedisValue> values)
         {
-            var tasks = values.Select(x => GetEntity(x));
+            var tasks = values.Select(Deserialize);
             var entities = await Task.WhenAll(tasks);
 
             return entities.Where(x => x != null);
         }
 
-        private async Task<T> GetEntity(RedisValue value)
+        private async Task<T> Deserialize(RedisValue value)
         {
-            var entityJson = (string) value;
+            var entityJson = (string)value;
 
             try
             {
@@ -162,14 +154,14 @@ namespace AzureStorage.Tables.Redis
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(NoSqlTableInRedis<T>), nameof(GetEntity), value, ex);
+                _log.WriteErrorAsync(nameof(NoSqlTableInRedis<T>), nameof(Deserialize), value, ex);
                 return null;
             }
         }
 
         private async Task<IList<T>> GetPartition(string partitionKey)
         {
-            return await GetEntityByKeyPattern(Patterns.GetPartition(_offset, partitionKey));
+            return await GetEntityByKeyPattern(Patterns.GetPartition(_tableName, partitionKey));
         }
 
         private async Task<IList<T>> GetEntityByKeyPattern(string pattern)
@@ -189,7 +181,7 @@ namespace AzureStorage.Tables.Redis
                 batch.Execute();
                 var batchValues = await task;
 
-                listEntity.AddRange(await GetEntities(batchValues));
+                listEntity.AddRange(await DeserializeMany(batchValues));
 
                 pageOffset++;
             }
@@ -212,7 +204,7 @@ namespace AzureStorage.Tables.Redis
             return GetEnumerator();
         }
 
-        public string Name => $"RedisCache({_offset})";
+        public string Name => $"RedisCache({_tableName})";
 
         T INoSQLTableStorage<T>.this[string partition, string row] => GetEntityFromCache(partition, row).GetAwaiter().GetResult();
 
@@ -384,7 +376,7 @@ namespace AzureStorage.Tables.Redis
             batch.Execute();
             var values = await task;
 
-            return (await GetEntities(values)).Where(filter);
+            return (await DeserializeMany(values)).Where(filter);
         }
 
         public async Task<IEnumerable<T>> GetDataAsync(IEnumerable<string> partitionKeys, int pieceSize = 100, Func<T, bool> filter = null)

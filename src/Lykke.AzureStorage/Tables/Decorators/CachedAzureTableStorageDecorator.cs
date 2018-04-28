@@ -22,33 +22,6 @@ namespace AzureStorage.Tables.Decorators
 
         private bool _cacheOutOfDate;
 
-        public IEnumerable<T> this[string partition]
-        {
-            get
-            {
-                var cacheResult = TryGetFromCacheAsync(() => _cache.GetDataAsync(partition)).GetAwaiter().GetResult();
-
-                return cacheResult.Item1
-                    ? cacheResult.Item2
-                    : _storage.GetDataAsync(partition).GetAwaiter().GetResult();
-            }
-        }
-
-        public T this[string partition, string row]
-        {
-            get
-            {
-                var cacheResult = TryGetFromCacheAsync(() => _cache.GetDataAsync(partition, row)).GetAwaiter()
-                    .GetResult();
-
-                return cacheResult.Item1
-                    ? cacheResult.Item2
-                    : _storage.GetDataAsync(partition, row).GetAwaiter().GetResult();
-            }
-        }
-
-        public string Name => _storage.Name;
-
         public CachedAzureTableStorageDecorator(
             INoSQLTableStorage<T> storage,
             INoSQLTableStorage<T> cache,
@@ -61,13 +34,39 @@ namespace AzureStorage.Tables.Decorators
             _cacheOutOfDate = true;
         }
 
+        public string Name => _storage.Name;
+
+        public IEnumerable<T> this[string partition]
+        {
+            get
+            {
+                var cacheResult = TryGetFromCache(() => _cache[partition]);
+
+                return cacheResult.Item1
+                    ? cacheResult.Item2
+                    : _storage[partition];
+            }
+        }
+
+        public T this[string partition, string row]
+        {
+            get
+            {
+                var cacheResult = TryGetFromCache(() => _cache[partition, row]);
+
+                return cacheResult.Item1
+                    ? cacheResult.Item2
+                    : _storage[partition, row];
+            }
+        }
+
         public async Task<bool> CreateIfNotExistsAsync(T item)
         {
             var result = await _storage.CreateIfNotExistsAsync(item);
 
             if (!result) return false;
 
-            await TrySyncWithCacheAsync(() => _cache.CreateIfNotExistsAsync(item));
+            await TryActionOrRefreshCacheAsync(() => _cache.CreateIfNotExistsAsync(item));
 
             return true;
         }
@@ -75,6 +74,7 @@ namespace AzureStorage.Tables.Decorators
         public Task CreateTableIfNotExistsAsync()
         {
             return _storage.CreateTableIfNotExistsAsync();
+            // todo: _cache.CreateTableIfNotExistsAsync(); ?
         }
 
         public async Task<bool> InsertOrModifyAsync(string partitionKey, string rowKey, Func<T> create, Func<T, bool> modify)
@@ -83,7 +83,7 @@ namespace AzureStorage.Tables.Decorators
 
             if (!result) return false;
 
-            await TrySyncWithCacheAsync(() => _cache.InsertOrModifyAsync(partitionKey, rowKey, create, modify));
+            await TryActionOrRefreshCacheAsync(() => _cache.InsertOrModifyAsync(partitionKey, rowKey, create, modify));
 
             return true;
         }
@@ -92,14 +92,14 @@ namespace AzureStorage.Tables.Decorators
         {
             await _storage.DeleteAsync(item);
 
-            await TrySyncWithCacheAsync(() => _cache.DeleteAsync(item));
+            await TryActionOrRefreshCacheAsync(() => _cache.DeleteAsync(item));
         }
 
         public async Task<T> DeleteAsync(string partitionKey, string rowKey)
         {
             var deletedItem = await _storage.DeleteAsync(partitionKey, rowKey);
 
-            await TrySyncWithCacheAsync(() => _cache.DeleteAsync(partitionKey, rowKey));
+            await TryActionOrRefreshCacheAsync(() => _cache.DeleteAsync(partitionKey, rowKey));
 
             return deletedItem;
         }
@@ -110,7 +110,7 @@ namespace AzureStorage.Tables.Decorators
 
             if (!result) return false;
 
-            await TrySyncWithCacheAsync(() => _cache.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition));
+            await TryActionOrRefreshCacheAsync(() => _cache.DeleteIfExistAsync(partitionKey, rowKey, deleteCondition));
 
             return true;
         }
@@ -121,7 +121,7 @@ namespace AzureStorage.Tables.Decorators
 
             if (!result) return false;
 
-            await TrySyncWithCacheAsync(() => _cache.DeleteAsync());
+            await TryActionOrRefreshCacheAsync(() => _cache.DeleteAsync());
 
             return true;
         }
@@ -132,7 +132,7 @@ namespace AzureStorage.Tables.Decorators
 
             await _storage.DeleteAsync(list);
 
-            await TrySyncWithCacheAsync(() => _cache.DeleteAsync(list));
+            await TryActionOrRefreshCacheAsync(() => _cache.DeleteAsync(list));
         }
 
         public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey)
@@ -141,7 +141,7 @@ namespace AzureStorage.Tables.Decorators
 
             if (!result) return false;
 
-            await TrySyncWithCacheAsync(() => _cache.DeleteIfExistAsync(partitionKey, rowKey));
+            await TryActionOrRefreshCacheAsync(() => _cache.DeleteIfExistAsync(partitionKey, rowKey));
 
             return true;
         }
@@ -150,7 +150,7 @@ namespace AzureStorage.Tables.Decorators
         {
             await _storage.DoBatchAsync(batch);
 
-            await TrySyncWithCacheAsync(() => _cache.DoBatchAsync(batch));
+            await TryActionOrRefreshCacheAsync(() => _cache.DoBatchAsync(batch));
         }
 
         public async Task ExecuteAsync(TableQuery<T> rangeQuery, Action<IEnumerable<T>> yieldResult, Func<bool> stopCondition = null)
@@ -280,7 +280,6 @@ namespace AzureStorage.Tables.Decorators
 
         public Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
         {
-            // todo: cache?
             return _storage.GetDataWithContinuationTokenAsync(rangeQuery, continuationToken);
         }
 
@@ -314,7 +313,7 @@ namespace AzureStorage.Tables.Decorators
         {
             await _storage.InsertAsync(item, notLogCodes);
 
-            await TrySyncWithCacheAsync(() => _cache.InsertAsync(item, notLogCodes));
+            await TryActionOrRefreshCacheAsync(() => _cache.InsertAsync(item, notLogCodes));
         }
 
         public async Task InsertAsync(IEnumerable<T> items)
@@ -323,14 +322,14 @@ namespace AzureStorage.Tables.Decorators
 
             await _storage.InsertAsync(list);
 
-            await TrySyncWithCacheAsync(() => _cache.InsertAsync(list));
+            await TryActionOrRefreshCacheAsync(() => _cache.InsertAsync(list));
         }
 
         public async Task InsertOrMergeAsync(T item)
         {
             await _storage.InsertOrMergeAsync(item);
 
-            await TrySyncWithCacheAsync(() => _cache.InsertOrMergeAsync(item));
+            await TryActionOrRefreshCacheAsync(() => _cache.InsertOrMergeAsync(item));
         }
 
         public async Task InsertOrMergeBatchAsync(IEnumerable<T> items)
@@ -339,14 +338,14 @@ namespace AzureStorage.Tables.Decorators
 
             await _storage.InsertOrMergeBatchAsync(list);
 
-            await TrySyncWithCacheAsync(() => _cache.InsertOrMergeBatchAsync(list));
+            await TryActionOrRefreshCacheAsync(() => _cache.InsertOrMergeBatchAsync(list));
         }
 
         public async Task InsertOrReplaceAsync(T item)
         {
             await _storage.InsertOrReplaceAsync(item);
 
-            await TrySyncWithCacheAsync(() => _cache.InsertOrReplaceAsync(item));
+            await TryActionOrRefreshCacheAsync(() => _cache.InsertOrReplaceAsync(item));
         }
 
         public async Task InsertOrReplaceAsync(IEnumerable<T> items)
@@ -355,7 +354,7 @@ namespace AzureStorage.Tables.Decorators
 
             await _storage.InsertOrReplaceAsync(list);
 
-            await TrySyncWithCacheAsync(() => _cache.InsertOrReplaceAsync(list));
+            await TryActionOrRefreshCacheAsync(() => _cache.InsertOrReplaceAsync(list));
         }
 
         public async Task<bool> InsertOrReplaceAsync(T entity, Func<T, bool> replaceCondition)
@@ -364,7 +363,7 @@ namespace AzureStorage.Tables.Decorators
 
             if (!result) return false;
 
-            await TrySyncWithCacheAsync(() => _cache.InsertOrReplaceAsync(entity, replaceCondition));
+            await TryActionOrRefreshCacheAsync(() => _cache.InsertOrReplaceAsync(entity, replaceCondition));
 
             return true;
         }
@@ -375,14 +374,14 @@ namespace AzureStorage.Tables.Decorators
 
             await _storage.InsertOrReplaceBatchAsync(list);
 
-            await TrySyncWithCacheAsync(() => _cache.InsertOrReplaceBatchAsync(list));
+            await TryActionOrRefreshCacheAsync(() => _cache.InsertOrReplaceBatchAsync(list));
         }
 
         public async Task ReplaceAsync(T entity)
         {
             await _storage.ReplaceAsync(entity);
 
-            await TrySyncWithCacheAsync(() => _cache.ReplaceAsync(entity));
+            await TryActionOrRefreshCacheAsync(() => _cache.ReplaceAsync(entity));
         }
 
         public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
@@ -391,7 +390,7 @@ namespace AzureStorage.Tables.Decorators
 
             if (result != null)
             {
-                await TrySyncWithCacheAsync(() => _cache.MergeAsync(partitionKey, rowKey, item));
+                await TryActionOrRefreshCacheAsync(() => _cache.MergeAsync(partitionKey, rowKey, item));
             }
 
             return result;
@@ -417,7 +416,7 @@ namespace AzureStorage.Tables.Decorators
 
             if (result != null)
             {
-                await TrySyncWithCacheAsync(() => _cache.ReplaceAsync(partitionKey, rowKey, item));
+                await TryActionOrRefreshCacheAsync(() => _cache.ReplaceAsync(partitionKey, rowKey, item));
             }
 
             return result;
@@ -470,14 +469,14 @@ namespace AzureStorage.Tables.Decorators
                 return false;
             }
 
-            var records = await _storage.GetDataAsync();
-
-            await _cache.InsertAsync(records);
+            //var records = await _storage.GetDataAsync();
+            //await _cache.InsertAsync(records);
+            await _cache.InsertAsync(_storage);
 
             return true;
         }
 
-        private async Task TrySyncWithCacheAsync(Func<Task> action)
+        private async Task TryActionOrRefreshCacheAsync(Func<Task> action)
         {
             try
             {
@@ -494,6 +493,30 @@ namespace AzureStorage.Tables.Decorators
             {
                 _cacheOutOfDate = true;
             }
+        }
+
+        private async Task<bool> TryGetFromCacheAsync(Func<Task> getFunc)
+        {
+            if (_cacheOutOfDate)
+            {
+                if (!await RefreshCache())
+                {
+                    return false;
+                }
+
+                _cacheOutOfDate = false;
+            }
+
+            try
+            {
+                await getFunc();
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private async Task<Tuple<bool, TResult>> TryGetFromCacheAsync<TResult>(Func<Task<TResult>> getFunc)
@@ -520,30 +543,6 @@ namespace AzureStorage.Tables.Decorators
             {
                 return failedResult;
             }
-        }
-
-        private async Task<bool> TryGetFromCacheAsync(Func<Task> getFunc)
-        {
-            if (_cacheOutOfDate)
-            {
-                if (!await RefreshCache())
-                {
-                    return false;
-                }
-
-                _cacheOutOfDate = false;
-            }
-
-            try
-            {
-                await getFunc();
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
         }
 
         private Tuple<bool, TResult> TryGetFromCache<TResult>(Func<TResult> getFunc)

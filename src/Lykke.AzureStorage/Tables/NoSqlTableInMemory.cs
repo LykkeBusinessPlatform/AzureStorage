@@ -572,7 +572,7 @@ namespace AzureStorage.Tables
 
         public Task GetDataByChunksAsync(Func<IEnumerable<T>, Task> chunks)
         {
-            var data = GetData();
+            var data = GetAllData();
             return chunks(data);
         }
 
@@ -583,7 +583,7 @@ namespace AzureStorage.Tables
 
         public Task GetDataByChunksAsync(Action<IEnumerable<T>> chunks)
         {
-            var data = GetData();
+            var data = GetAllData();
             chunks(data);
             return Task.FromResult(0);
         }
@@ -632,18 +632,7 @@ namespace AzureStorage.Tables
             }
         }
         
-        public IEnumerable<T> GetData(Func<T, bool> filter = null)
-        {
-            return GetAllData(filter);
-        }
-
-        public IEnumerable<T> GetData(string partitionKey, Func<T, bool> filter = null)
-        {
-            var result = this[partitionKey];
-
-            return filter == null ? result : result.Where(filter);
-        }
-
+        
         public Task<IEnumerable<T>> GetDataAsync(string partition, Func<T, bool> filter)
         {
             return Task.Run(() => AzureStorageUtils.ApplyFilter(this[partition], filter));

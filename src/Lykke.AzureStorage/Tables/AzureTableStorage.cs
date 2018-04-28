@@ -201,7 +201,8 @@ namespace AzureStorage.Tables
                             new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<T>(MakeStorage),
                             onModificationRetryCount,
                             onGettingRetryCount,
-                            retryDelay)
+                            retryDelay),
+                        log
                     ),
                     log);
         }
@@ -211,7 +212,7 @@ namespace AzureStorage.Tables
             IDistributedCache redisCache,
             IDatabase redisDatabase,
             IServer redisServer,
-            IAzureRedisSettings settings,
+            AzureRedisSettings settings,
             string tableName,
             ILog log,
             TimeSpan? maxExecutionTimeout = null,
