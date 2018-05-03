@@ -51,7 +51,7 @@ namespace AzureStorage.Tables.Redis
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _database = database ?? throw new ArgumentNullException(nameof(database));
             _redisServer = redisServer ?? throw new ArgumentNullException(nameof(redisServer));
-            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _log = log.CreateComponentScope(nameof(NoSqlTableInRedis<T>));
             _tableName = settings?.TableName;
 
             if (string.IsNullOrWhiteSpace(_tableName))
@@ -93,7 +93,7 @@ namespace AzureStorage.Tables.Redis
             batch.Execute();
             var values = await task;
 
-            return (await DeserializeMany(values)).Where(filter);
+            return DeserializeMany(values).Where(filter);
         }
 
         private async Task ClearCache()
@@ -117,28 +117,19 @@ namespace AzureStorage.Tables.Redis
             return Patterns.GetKey(_tableName, partitionKey, rowKey);
         }
 
-        private async Task<T> GetEntityFromCache(string partitionKey, string rowKey)
+        private async Task<T> GetAsync(string partitionKey, string rowKey)
         {
-            var key = Patterns.GetKey(_tableName, partitionKey, rowKey);
-            return await GetEntity(key);
+            var key = GetCacheKey(partitionKey, rowKey);
+            var entityJson = await _cache.GetStringAsync(key);
+            return Deserialize(entityJson);
         }
 
-        private async Task<T> GetEntity(string cacheKey)
+        private IEnumerable<T> DeserializeMany(IEnumerable<RedisValue> values)
         {
-            var entityJson = await _cache.GetStringAsync(cacheKey);
-
-            return await Deserialize(entityJson);
+            return values.Select(Deserialize);
         }
 
-        private async Task<IEnumerable<T>> DeserializeMany(IEnumerable<RedisValue> values)
-        {
-            var tasks = values.Select(Deserialize);
-            var entities = await Task.WhenAll(tasks);
-
-            return entities.Where(x => x != null);
-        }
-
-        private async Task<T> Deserialize(RedisValue value)
+        private T Deserialize(RedisValue value)
         {
             var entityJson = (string)value;
 
@@ -154,17 +145,17 @@ namespace AzureStorage.Tables.Redis
             }
             catch (Exception ex)
             {
-                _log.WriteErrorAsync(nameof(NoSqlTableInRedis<T>), nameof(Deserialize), value, ex);
+                _log.WriteError("Deserialize", value, ex); // todo: warning?
                 return null;
             }
         }
 
         private async Task<IList<T>> GetPartition(string partitionKey)
         {
-            return await GetEntityByKeyPattern(Patterns.GetPartition(_tableName, partitionKey));
+            return await GetEntitiesByKeyPattern(Patterns.GetPartition(_tableName, partitionKey));
         }
 
-        private async Task<IList<T>> GetEntityByKeyPattern(string pattern)
+        private async Task<IList<T>> GetEntitiesByKeyPattern(string pattern)
         {
             var pageOffset = 0;
             var listEntity = new List<T>();
@@ -181,7 +172,7 @@ namespace AzureStorage.Tables.Redis
                 batch.Execute();
                 var batchValues = await task;
 
-                listEntity.AddRange(await DeserializeMany(batchValues));
+                listEntity.AddRange(DeserializeMany(batchValues));
 
                 pageOffset++;
             }
@@ -189,7 +180,7 @@ namespace AzureStorage.Tables.Redis
             return listEntity;
         }
 
-        private async Task SetEntityInCache(T entity)
+        private async Task SaveAsync(T entity)
         {
             await _cache.SetStringAsync(GetCacheKey(entity), entity.ToJson(), _options);
         }
@@ -206,20 +197,20 @@ namespace AzureStorage.Tables.Redis
 
         public string Name => $"RedisCache({_tableName})";
 
-        T INoSQLTableStorage<T>.this[string partition, string row] => GetEntityFromCache(partition, row).GetAwaiter().GetResult();
+        T INoSQLTableStorage<T>.this[string partition, string row] => GetAsync(partition, row).GetAwaiter().GetResult();
 
         IEnumerable<T> INoSQLTableStorage<T>.this[string partition] => GetPartition(partition).GetAwaiter().GetResult();
 
-        public async Task InsertAsync(T item, params int[] notLogCodes)
+        public Task InsertAsync(T item, params int[] notLogCodes)
         {
-            await SetEntityInCache(item);
+            return SaveAsync(item);
         }
 
         public async Task InsertAsync(IEnumerable<T> items)
         {
             foreach (var item in items)
             {
-                await SetEntityInCache(item);
+                await InsertAsync(item);
             }
         }
 
@@ -233,10 +224,10 @@ namespace AzureStorage.Tables.Redis
             throw new NotSupportedException($"{nameof(InsertOrMergeBatchAsync)} is not supported on Redis");
         }
 
-        public async Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> item)
+        public async Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> replaceAction)
         {
             var existing = await GetDataAsync(partitionKey, rowKey);
-            var newValue = item(existing);
+            var newValue = replaceAction(existing);
             if (newValue != null)
             {
                 await InsertOrReplaceAsync(newValue);
@@ -247,12 +238,12 @@ namespace AzureStorage.Tables.Redis
 
         public Task ReplaceAsync(T entity)
         {
-            throw new NotImplementedException();
+            return InsertAsync(entity);
         }
 
-        public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
+        public Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
         {
-            return await ReplaceAsync(partitionKey, rowKey, item);
+            return ReplaceAsync(partitionKey, rowKey, item);
         }
 
         public async Task InsertOrReplaceBatchAsync(IEnumerable<T> entities)
@@ -263,16 +254,16 @@ namespace AzureStorage.Tables.Redis
             }
         }
 
-        public async Task InsertOrReplaceAsync(T item)
+        public Task InsertOrReplaceAsync(T item)
         {
-            await SetEntityInCache(item);
+            return SaveAsync(item);
         }
 
         public async Task InsertOrReplaceAsync(IEnumerable<T> items)
         {
             foreach (var item in items)
             {
-                await SetEntityInCache(item);
+                await SaveAsync(item);
             }
         }
 
@@ -286,28 +277,33 @@ namespace AzureStorage.Tables.Redis
             throw new NotImplementedException();
         }
 
-        public async Task DeleteAsync(T item)
+        public Task DeleteAsync(T item)
         {
-            await _cache.RemoveAsync(GetCacheKey(item));
+            return _cache.RemoveAsync(GetCacheKey(item));
         }
 
         public async Task<T> DeleteAsync(string partitionKey, string rowKey)
         {
-            var item = await GetEntityFromCache(partitionKey, rowKey);
+            var item = await GetAsync(partitionKey, rowKey);
             if (item != null)
                 await DeleteAsync(item);
             return item;
         }
 
-        public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey)
+        public Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey)
         {
-            var item = await DeleteAsync(partitionKey, rowKey);
-            return item != null;
+            return DeleteIfExistAsync(partitionKey, rowKey, _ => true);
         }
 
-        public Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
+        public async Task<bool> DeleteIfExistAsync(string partitionKey, string rowKey, Func<T, bool> deleteCondition)
         {
-            throw new NotImplementedException();
+            var item = await GetAsync(partitionKey, rowKey);
+            if (item != null && deleteCondition(item))
+            {
+                await DeleteAsync(item);
+                return true;
+            }
+            return false;
         }
 
         public async Task<bool> DeleteAsync()
@@ -318,7 +314,7 @@ namespace AzureStorage.Tables.Redis
 
         public async Task DeleteAsync(IEnumerable<T> items)
         {
-            var keys = items.Select(x => GetCacheKey(x));
+            var keys = items.Select(GetCacheKey);
 
             var batch = _database.CreateBatch();
             var task = batch.KeyDeleteAsync(keys.Cast<RedisKey>().ToArray());
@@ -332,7 +328,7 @@ namespace AzureStorage.Tables.Redis
             var exists = await _database.KeyExistsAsync(GetCacheKey(item));
             if (!exists)
             {
-                await SetEntityInCache(item);
+                await SaveAsync(item);
                 return true;
             }
             return false;
@@ -340,43 +336,23 @@ namespace AzureStorage.Tables.Redis
 
         public bool RecordExists(T item)
         {
-            var key = GetCacheKey(item);
-
-            return _database.KeyExistsAsync(key).GetAwaiter().GetResult();
+            return _database.KeyExists(GetCacheKey(item));
         }
 
         public Task<bool> RecordExistsAsync(T item)
         {
-            var key = GetCacheKey(item);
-
-            return _database.KeyExistsAsync(key);
+            return _database.KeyExistsAsync(GetCacheKey(item));
         }
 
         public Task<T> GetDataAsync(string partition, string row)
         {
-            return GetEntityFromCache(partition, row);
+            return GetAsync(partition, row);
         }
 
         public async Task<IList<T>> GetDataAsync(Func<T, bool> filter = null)
         {
             var list = await GetAllData(filter);
             return list as IList<T> ?? list.ToList();
-        }
-
-        public async Task<IEnumerable<T>> GetDataAsync(string partitionKey, IEnumerable<string> rowKeys, int pieceSize = 100, Func<T, bool> filter = null)
-        {
-            if (filter == null)
-                filter = e => true;
-
-            var batch = _database.CreateBatch();
-            var task = batch.StringGetAsync(rowKeys
-                .Select(x => GetCacheKey(partitionKey, x))
-                .Cast<RedisKey>()
-                .ToArray());
-            batch.Execute();
-            var values = await task;
-
-            return (await DeserializeMany(values)).Where(filter);
         }
 
         public async Task<IEnumerable<T>> GetDataAsync(IEnumerable<string> partitionKeys, int pieceSize = 100, Func<T, bool> filter = null)
@@ -394,21 +370,25 @@ namespace AzureStorage.Tables.Redis
             return result;
         }
 
+        public Task<IEnumerable<T>> GetDataAsync(string partitionKey, IEnumerable<string> rowKeys, int pieceSize = 100, Func<T, bool> filter = null)
+        {
+            return GetDataAsync(rowKeys.Select(key => new Tuple<string, string>(partitionKey, key)), pieceSize, filter);
+        }
+
         public async Task<IEnumerable<T>> GetDataAsync(IEnumerable<Tuple<string, string>> keys, int pieceSize = 100, Func<T, bool> filter = null)
         {
-            var result = new List<T>();
+            if (filter == null)
+                filter = e => true;
 
-            foreach (var key in keys)
-            {
-                var data = await GetEntityFromCache(key.Item1, key.Item2);
+            var batch = _database.CreateBatch();
+            var task = batch.StringGetAsync(keys
+                .Select(key => GetCacheKey(key.Item1, key.Item2))
+                .Cast<RedisKey>()
+                .ToArray());
+            batch.Execute();
+            var values = await task;
 
-                if (filter == null || filter(data))
-                {
-                    result.Add(data);
-                }
-            }
-
-            return result;
+            return DeserializeMany(values).Where(filter);
         }
 
         public async Task GetDataByChunksAsync(Func<IEnumerable<T>, Task> chunks)
@@ -488,7 +468,7 @@ namespace AzureStorage.Tables.Redis
             var list = new List<T>();
             foreach (var patternKey in patternKeys)
             {
-                var patternEntities = await GetEntityByKeyPattern(patternKey);
+                var patternEntities = await GetEntitiesByKeyPattern(patternKey);
                 list.AddRange(patternEntities);
             }
 
