@@ -34,6 +34,11 @@ namespace Lykke.AzureStorage.Cryptography
 
         public string Serialize(string value)
         {
+            if (string.IsNullOrEmpty(value))
+            {
+                throw new ArgumentException("Data cannot be empty", nameof(value));
+            }
+
             var buf = Encrypt(value, _key, out var iv);
 
             var ivText = Convert.ToBase64String(iv);
@@ -44,9 +49,9 @@ namespace Lykke.AzureStorage.Cryptography
 
         public string Deserialize(string value)
         {
-            if (string.IsNullOrEmpty(value))
+            if (!IsEncrypted(value))
             {
-                throw new ArgumentException("Encrypted data cannot be empty", nameof(value));
+                throw new ArgumentException("Data is not encrypted or not supported format", nameof(value));
             }
 
             var prm = value.Substring(Prefix.Length).Split(Separator);
@@ -70,6 +75,7 @@ namespace Lykke.AzureStorage.Cryptography
         {
             if (string.IsNullOrEmpty(plainText))
                 throw new ArgumentNullException(nameof(plainText));
+
             byte[] encrypted;
 
             using (var algo = Aes.Create())

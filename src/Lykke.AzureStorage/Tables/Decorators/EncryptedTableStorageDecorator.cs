@@ -30,7 +30,7 @@ namespace AzureStorage.Tables.Decorators
         /// </summary>
         /// <param name="storage"></param>
         /// <param name="serializer"></param>
-        /// <param name="forceEncrypt">If true, checks if existed entires are encrypted, and encrypt them if not.</param>
+        /// <param name="forceEncrypt">If true, checks if existed entries are encrypted, and encrypt them if not.</param>
         public EncryptedTableStorageDecorator(
             [NotNull] INoSQLTableStorage<T> storage,
             [NotNull] ICryptographicSerializer serializer,
@@ -80,7 +80,7 @@ namespace AzureStorage.Tables.Decorators
                 property.SetValue(entity, value);
             }
 
-            if (_forceEncrypt && hasNonEncryptedProperties)
+            if (hasNonEncryptedProperties)
             {
                 ReplaceAsync(entity).GetAwaiter().GetResult();
             }
