@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
-    <PackageReference Include="Lykke.Common" Version="1.1.98" />
+    <PackageReference Include="Lykke.Common" Version="7.0.0-beta.5" />
     <PackageReference Include="Lykke.SettingsReader" Version="1.0.43" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.4.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />

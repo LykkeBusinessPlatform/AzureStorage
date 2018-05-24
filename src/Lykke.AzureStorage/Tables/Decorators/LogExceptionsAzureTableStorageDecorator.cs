@@ -7,6 +7,7 @@ using Common.Extensions;
 using Common.Log;
 using Lykke.AzureStorage;
 using Lykke.AzureStorage.Tables.Paging;
+using Lykke.Common.Log;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -25,10 +26,24 @@ namespace AzureStorage.Tables.Decorators
         private readonly ILog _log;
         private readonly JsonSerializerSettings _dumpSettings;
 
+        [Obsolete]
         public LogExceptionsAzureTableStorageDecorator(INoSQLTableStorage<TEntity> impl, ILog log)
         {
             _impl = impl;
             _log = log;
+
+            _dumpSettings = new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                Formatting = Formatting.Indented,
+                Culture = CultureInfo.InvariantCulture
+            };
+        }
+
+        public LogExceptionsAzureTableStorageDecorator(INoSQLTableStorage<TEntity> impl, ILogFactory logFactory)
+        {
+            _impl = impl;
+            _log = logFactory.CreateLog(this);
 
             _dumpSettings = new JsonSerializerSettings
             {
