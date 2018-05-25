@@ -185,9 +185,9 @@ namespace AzureStorage.Blob
             return dateTimeOffset.GetValueOrDefault().UtcDateTime;
         }
 
-        public async Task<Stream> GetAsync(string blobContainer, string key)
+        public async Task<Stream> GetAsync(string container, string key)
         {
-            var blockBlob = await GetBlockBlobReferenceAsync(blobContainer, key);
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key);
             
             var ms = new MemoryStream();
             await blockBlob.DownloadToStreamAsync(ms, null, GetRequestOptions(), null);
@@ -195,9 +195,9 @@ namespace AzureStorage.Blob
             return ms;
         }
 
-        public async Task<string> GetAsTextAsync(string blobContainer, string key)
+        public async Task<string> GetAsTextAsync(string container, string key)
         {
-            var blockBlob = await GetBlockBlobReferenceAsync(blobContainer, key);
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key);
             return await blockBlob.DownloadTextAsync(null, GetRequestOptions(), null);
         }
 
@@ -270,9 +270,9 @@ namespace AzureStorage.Blob
             return results;
         }
 
-        public async Task DelBlobAsync(string blobContainer, string key)
+        public async Task DelBlobAsync(string container, string key)
         {
-            var blockBlob = await GetBlockBlobReferenceAsync(blobContainer, key);
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key);
             await blockBlob.DeleteAsync(DeleteSnapshotsOption.None, null, GetRequestOptions(), null);
         }
 
@@ -291,7 +291,7 @@ namespace AzureStorage.Blob
         public async Task<string> GetMetadataAsync(string container, string key, string metaDataKey)
         {
             var metadata = await GetMetadataAsync(container, key);
-            if ((metadata?.Count ?? 0) == 0 || !metadata.ContainsKey(metaDataKey))
+            if ((metadata?.Count ?? 0) == 0 || (!metadata?.ContainsKey(metaDataKey) ?? true))
                 return null;
 
             return metadata[metaDataKey];

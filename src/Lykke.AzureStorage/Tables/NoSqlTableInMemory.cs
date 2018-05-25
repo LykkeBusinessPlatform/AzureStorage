@@ -93,11 +93,11 @@ namespace AzureStorage.Tables
         
         private readonly SemaphoreSlim _lockSlim = new SemaphoreSlim(1);
 
-        public readonly ConcurrentDictionary<string, Partition> Partitions = new ConcurrentDictionary<string, Partition>();
+        private readonly ConcurrentDictionary<string, Partition> _partitions = new ConcurrentDictionary<string, Partition>();
 
         private IEnumerable<T> GetAllData(Func<T, bool> filter = null)
         {
-            var result = from partition in Partitions.Values from row in partition.Rows.Values select row.Deserialize<T>();
+            var result = from partition in _partitions.Values from row in partition.Rows.Values select row.Deserialize<T>();
             if (filter != null)
                 result = result.Where(filter);
 
@@ -119,12 +119,12 @@ namespace AzureStorage.Tables
         {
             if (!createNewIfNotExists)
             {
-                if (Partitions.TryGetValue(partitionKey, out var data))
+                if (_partitions.TryGetValue(partitionKey, out var data))
                     return data;
                 return null;
             }
 
-            return Partitions.GetOrAdd(partitionKey, new Partition());
+            return _partitions.GetOrAdd(partitionKey, new Partition());
         }
 
         private Row GetRow(string partitionKey, string rowKey)
@@ -208,7 +208,7 @@ namespace AzureStorage.Tables
                 await InsertOrMergeAsync(entity);
         }
 
-        public async Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> item)
+        public async Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> replaceAction)
         {
             await _lockSlim.WaitAsync();
             try
@@ -218,7 +218,7 @@ namespace AzureStorage.Tables
                     return null;
 
                 var entity = row.Deserialize<T>();
-                var result = item(entity);
+                var result = replaceAction(entity);
 
                 if (result != null)
                     row.Replace(result);
@@ -249,7 +249,7 @@ namespace AzureStorage.Tables
             }
         }
 
-        public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
+        public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> mergeAction)
         {
             await _lockSlim.WaitAsync();
             try
@@ -261,7 +261,7 @@ namespace AzureStorage.Tables
                             partitionKey, rowKey));
 
                 var entity = row.Deserialize<T>();
-                var result = item(entity);
+                var result = mergeAction(entity);
 
                 if (result != null)
                     row.Merge(result);
@@ -275,9 +275,9 @@ namespace AzureStorage.Tables
             }
         }
 
-        public async Task InsertOrReplaceBatchAsync(IEnumerable<T> entites)
+        public async Task InsertOrReplaceBatchAsync(IEnumerable<T> entities)
         {
-            foreach (var entity in entites)
+            foreach (var entity in entities)
                 await InsertOrReplaceAsync(entity);
         }
 
@@ -434,7 +434,7 @@ namespace AzureStorage.Tables
             await _lockSlim.WaitAsync();
             try
             {
-                Partitions.Clear();
+                _partitions.Clear();
 
                 return true;
             }
@@ -517,7 +517,7 @@ namespace AzureStorage.Tables
             return Task.Run(() => (IList<T>)GetAllData(filter).ToList());
         }
 
-        public Task<IEnumerable<T>> GetDataAsync(string partitionKey, IEnumerable<string> rowKeys, int pieces = 15, Func<T, bool> filter = null)
+        public Task<IEnumerable<T>> GetDataAsync(string partitionKey, IEnumerable<string> rowKeys, int pieceSize = 100, Func<T, bool> filter = null)
         {
             return Task.Run(() =>
             {
@@ -558,16 +558,16 @@ namespace AzureStorage.Tables
             return Task.FromResult((IEnumerable<T>)result);
         }
 
-        public Task<T> GetTopRecordAsync(string partitionKey)
+        public Task<T> GetTopRecordAsync(string partition)
         {
-            var partition = GetPartition(partitionKey, false);
-            return Task.FromResult(partition?.Rows?.FirstOrDefault().Value?.Deserialize<T>());
+            var partitionKey = GetPartition(partition, false);
+            return Task.FromResult(partitionKey?.Rows?.FirstOrDefault().Value?.Deserialize<T>());
         }
 
-        public Task<IEnumerable<T>> GetTopRecordsAsync(string partitionKey, int n)
+        public Task<IEnumerable<T>> GetTopRecordsAsync(string partition, int n)
         {
-            var partition = GetPartition(partitionKey, false);
-            return Task.FromResult(partition.Rows.Take(n).Select(x => x.Value.Deserialize<T>()));
+            var partitionKey = GetPartition(partition, false);
+            return Task.FromResult(partitionKey.Rows.Take(n).Select(x => x.Value.Deserialize<T>()));
         }
 
         public Task GetDataByChunksAsync(Func<IEnumerable<T>, Task> chunks)
@@ -644,7 +644,7 @@ namespace AzureStorage.Tables
             return filter == null ? result : result.Where(filter);
         }
 
-        public Task<IEnumerable<T>> GetDataAsync(string partition, Func<T, bool> filter)
+        public Task<IEnumerable<T>> GetDataAsync(string partition, Func<T, bool> filter = null)
         {
             return Task.Run(() => AzureStorageUtils.ApplyFilter(this[partition], filter));
         }

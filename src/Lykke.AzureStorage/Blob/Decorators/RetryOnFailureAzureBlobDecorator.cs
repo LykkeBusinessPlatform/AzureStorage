@@ -86,11 +86,11 @@ namespace AzureStorage.Blob.Decorators
         public async Task<DateTime> GetBlobsLastModifiedAsync(string container) 
             => await _retryService.RetryAsync(async () => await _impl.GetBlobsLastModifiedAsync(container), _onGettingRetryCount);
 
-        public async Task<Stream> GetAsync(string blobContainer, string key) 
-            => await _retryService.RetryAsync(async () => await _impl.GetAsync(blobContainer, key), _onGettingRetryCount);
+        public async Task<Stream> GetAsync(string container, string key) 
+            => await _retryService.RetryAsync(async () => await _impl.GetAsync(container, key), _onGettingRetryCount);
 
-        public async Task<string> GetAsTextAsync(string blobContainer, string key) 
-            => await _retryService.RetryAsync(async () => await _impl.GetAsTextAsync(blobContainer, key), _onGettingRetryCount);
+        public async Task<string> GetAsTextAsync(string container, string key) 
+            => await _retryService.RetryAsync(async () => await _impl.GetAsTextAsync(container, key), _onGettingRetryCount);
 
         public string GetBlobUrl(string container, string key) 
             => _retryService.Retry(() => _impl.GetBlobUrl(container, key), _onGettingRetryCount);
@@ -104,8 +104,8 @@ namespace AzureStorage.Blob.Decorators
         public async Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container, int? maxResultsCount = null) 
             => await _retryService.RetryAsync(async () => await _impl.GetListOfBlobKeysAsync(container, maxResultsCount), _onGettingRetryCount);
 
-        public async Task DelBlobAsync(string blobContainer, string key) 
-            => await _retryService.RetryAsync(async () => await _impl.DelBlobAsync(blobContainer, key), _onModificationsRetryCount);
+        public async Task DelBlobAsync(string container, string key) 
+            => await _retryService.RetryAsync(async () => await _impl.DelBlobAsync(container, key), _onModificationsRetryCount);
 
         public async Task<string> GetMetadataAsync(string container, string key, string metaDataKey) 
             => await _retryService.RetryAsync(async () => await _impl.GetMetadataAsync(container, key, metaDataKey), _onGettingRetryCount);

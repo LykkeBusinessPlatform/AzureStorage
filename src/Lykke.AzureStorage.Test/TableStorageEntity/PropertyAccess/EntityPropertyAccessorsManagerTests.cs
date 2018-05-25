@@ -35,18 +35,8 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity.PropertyAccess
 
             public virtual int VirtualProperty { get; set; }
 
-            public int ReadOnlyProperty { get; }
-
-            public decimal WriteOnlyProperty { set => _writeOnlyProperty = value; }
-
             [IgnoreProperty]
             public DateTimeKind IgnoredProperty { get; set; }
-
-            private string PrivateProperty { get; set; }
-
-            internal string InternalProperty { get; set; }
-
-            private decimal _writeOnlyProperty;
         }
 
         private class DescendantTestEntity : TestEntity

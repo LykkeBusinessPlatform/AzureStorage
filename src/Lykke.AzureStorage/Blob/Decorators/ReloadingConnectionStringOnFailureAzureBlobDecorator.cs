@@ -34,11 +34,11 @@ namespace AzureStorage.Blob.Decorators
         public Task<DateTime> GetBlobsLastModifiedAsync(string container)
             => WrapAsync(x => x.GetBlobsLastModifiedAsync(container));
 
-        public Task<Stream> GetAsync(string blobContainer, string key)
-            => WrapAsync(x => x.GetAsync(blobContainer, key));
+        public Task<Stream> GetAsync(string container, string key)
+            => WrapAsync(x => x.GetAsync(container, key));
 
-        public Task<string> GetAsTextAsync(string blobContainer, string key)
-            => WrapAsync(x => x.GetAsTextAsync(blobContainer, key));
+        public Task<string> GetAsTextAsync(string container, string key)
+            => WrapAsync(x => x.GetAsTextAsync(container, key));
 
         public string GetBlobUrl(string container, string key)
             => Wrap(x => x.GetBlobUrl(container, key));
@@ -52,8 +52,8 @@ namespace AzureStorage.Blob.Decorators
         public Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container, int? maxResultsCount = null)
             => WrapAsync(x => x.GetListOfBlobKeysAsync(container, maxResultsCount));
 
-        public Task DelBlobAsync(string blobContainer, string key)
-            => WrapAsync(x => x.DelBlobAsync(blobContainer, key));
+        public Task DelBlobAsync(string container, string key)
+            => WrapAsync(x => x.DelBlobAsync(container, key));
 
         public Stream this[string container, string key]
             => Wrap(x => x[container, key]);

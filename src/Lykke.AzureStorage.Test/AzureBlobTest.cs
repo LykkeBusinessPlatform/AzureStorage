@@ -13,7 +13,7 @@ namespace Lykke.AzureStorage.Test
     public class AzureBlobTest
     {
         private IBlobStorage _testBlob;
-        private string _blobContainer = "LykkeAzureBlobTest";
+        private const string BlobContainer = "LykkeAzureBlobTest";
         private const string BlobName = "BlobName";
 
 
@@ -26,10 +26,10 @@ namespace Lykke.AzureStorage.Test
         [TestCleanup]
         public async Task TestClean()
         {
-            var items = (await _testBlob.GetListOfBlobKeysAsync(_blobContainer)).ToArray();
+            var items = (await _testBlob.GetListOfBlobKeysAsync(BlobContainer)).ToArray();
             foreach (var item in items)
             {
-                await _testBlob.DelBlobAsync(_blobContainer, item);
+                await _testBlob.DelBlobAsync(BlobContainer, item);
             }
         }
 
@@ -38,9 +38,9 @@ namespace Lykke.AzureStorage.Test
         {
             var data = new byte[] { 0x0, 0xff };
 
-            await _testBlob.SaveBlobAsync(_blobContainer, BlobName, new MemoryStream(data));
+            await _testBlob.SaveBlobAsync(BlobContainer, BlobName, new MemoryStream(data));
 
-            using (var result = await _testBlob.GetAsync(_blobContainer, BlobName))
+            using (var result = await _testBlob.GetAsync(BlobContainer, BlobName))
             using (var ms = new MemoryStream())
             {
                 result.CopyTo(ms);
@@ -55,9 +55,9 @@ namespace Lykke.AzureStorage.Test
             var data = new byte[] { 0x0, 0xff };
             var metadata = new Dictionary<string, string> {{"key", "value"}};
 
-            await _testBlob.SaveBlobAsync(_blobContainer, BlobName, data, metadata);
+            await _testBlob.SaveBlobAsync(BlobContainer, BlobName, data, metadata);
 
-            var metaValue = await _testBlob.GetMetadataAsync(_blobContainer, BlobName, metadata.Keys.First());
+            var metaValue = await _testBlob.GetMetadataAsync(BlobContainer, BlobName, metadata.Keys.First());
             Assert.AreEqual(metaValue, metadata.Values.First());
         }
 
@@ -66,10 +66,10 @@ namespace Lykke.AzureStorage.Test
         {
             Parallel.For(1, 11, i =>
             {
-                _testBlob.SaveBlobAsync(_blobContainer, Guid.NewGuid().ToString(), new MemoryStream(new[] { (byte)i })).Wait();
+                _testBlob.SaveBlobAsync(BlobContainer, Guid.NewGuid().ToString(), new MemoryStream(new[] { (byte)i })).Wait();
             });
 
-            var items = await _testBlob.GetListOfBlobsAsync(_blobContainer);
+            var items = await _testBlob.GetListOfBlobsAsync(BlobContainer);
 
             Assert.AreEqual(10, items.Count());
         }

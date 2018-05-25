@@ -34,7 +34,7 @@ namespace Lykke.AzureStorage.Tables
         public DateTimeOffset Timestamp { get; set; }
         public string ETag { get; set; }
 
-        private IValueTypeMergingStrategy _valueTypeMergingStrategy;
+        private readonly IValueTypeMergingStrategy _valueTypeMergingStrategy;
 
         protected AzureTableEntity()
         {

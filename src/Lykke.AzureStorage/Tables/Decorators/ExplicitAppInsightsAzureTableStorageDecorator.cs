@@ -53,11 +53,11 @@ namespace AzureStorage.Tables.Decorators
         public Task ReplaceAsync(TEntity entity)
             => WrapAsync(() => _impl.ReplaceAsync(entity), Name, "ReplaceAsync - item");
 
-        public Task<TEntity> ReplaceAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
-            => WrapAsync(() => _impl.ReplaceAsync(partitionKey, rowKey, item), Name, "ReplaceAsync - pk, rk, func");
+        public Task<TEntity> ReplaceAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> replaceAction)
+            => WrapAsync(() => _impl.ReplaceAsync(partitionKey, rowKey, replaceAction), Name, "ReplaceAsync - pk, rk, func");
 
-        public Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
-            => WrapAsync(() => _impl.MergeAsync(partitionKey, rowKey, item), Name);
+        public Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> mergeAction)
+            => WrapAsync(() => _impl.MergeAsync(partitionKey, rowKey, mergeAction), Name);
 
         public Task InsertOrReplaceBatchAsync(IEnumerable<TEntity> entities)
             => WrapAsync(() => _impl.InsertOrReplaceBatchAsync(entities), Name);

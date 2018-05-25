@@ -124,9 +124,9 @@ namespace AzureStorage.Tables.Decorators
             await _retryService.RetryAsync(async () => await _impl.InsertOrMergeBatchAsync(items), _onModificationsRetryCount);
         }
 
-        public async Task<TEntity> ReplaceAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
+        public async Task<TEntity> ReplaceAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> replaceAction)
         {
-            return await _retryService.RetryAsync(async () => await _impl.ReplaceAsync(partitionKey, rowKey, item), _onModificationsRetryCount);
+            return await _retryService.RetryAsync(async () => await _impl.ReplaceAsync(partitionKey, rowKey, replaceAction), _onModificationsRetryCount);
         }
 
         public Task ReplaceAsync(TEntity entity)
@@ -134,14 +134,14 @@ namespace AzureStorage.Tables.Decorators
             return _retryService.RetryAsync(() => _impl.ReplaceAsync(entity), _onModificationsRetryCount);
         }
 
-        public async Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
+        public async Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> mergeAction)
         {
-            return await _retryService.RetryAsync(async () => await _impl.MergeAsync(partitionKey, rowKey, item), _onModificationsRetryCount);
+            return await _retryService.RetryAsync(async () => await _impl.MergeAsync(partitionKey, rowKey, mergeAction), _onModificationsRetryCount);
         }
 
-        public async Task InsertOrReplaceBatchAsync(IEnumerable<TEntity> entites)
+        public async Task InsertOrReplaceBatchAsync(IEnumerable<TEntity> entities)
         {
-            await _retryService.RetryAsync(async () => await _impl.InsertOrReplaceBatchAsync(entites), _onModificationsRetryCount);
+            await _retryService.RetryAsync(async () => await _impl.InsertOrReplaceBatchAsync(entities), _onModificationsRetryCount);
         }
 
         public async Task InsertOrReplaceAsync(TEntity item)

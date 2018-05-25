@@ -32,8 +32,8 @@ namespace AzureStorage
         /// <summary>Returns datetime of latest modification among all blobs</summary>
         Task<DateTime> GetBlobsLastModifiedAsync(string container);
 
-        Task<Stream> GetAsync(string blobContainer, string key);
-        Task<string> GetAsTextAsync(string blobContainer, string key);
+        Task<Stream> GetAsync(string container, string key);
+        Task<string> GetAsTextAsync(string container, string key);
 
         string GetBlobUrl(string container, string key);
 
@@ -42,7 +42,7 @@ namespace AzureStorage
         Task<IEnumerable<string>> GetListOfBlobsAsync(string container);
         Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container, int? maxResultsCount = null);
 
-        Task DelBlobAsync(string blobContainer, string key);
+        Task DelBlobAsync(string container, string key);
 
         Stream this[string container, string key] { get; }
 
