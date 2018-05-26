@@ -400,11 +400,11 @@ namespace AzureStorage.Tables
             }
         }
 
-        public async Task InsertOrReplaceBatchAsync(IEnumerable<T> entites)
+        public async Task InsertOrReplaceBatchAsync(IEnumerable<T> entities)
         {
             var operationsBatch = new TableBatchOperation();
 
-            foreach (var entity in entites)
+            foreach (var entity in entities)
                 operationsBatch.Add(TableOperation.InsertOrReplace(entity));
             var table = await GetTableAsync();
 
@@ -659,7 +659,7 @@ namespace AzureStorage.Tables
         public virtual T this[string partition, string row] => GetDataAsync(partition, row).RunSync();
 
         public async Task<IEnumerable<T>> GetDataAsync(string partitionKey, IEnumerable<string> rowKeys,
-            int pieceSize = 15, Func<T, bool> filter = null)
+            int pieceSize = 100, Func<T, bool> filter = null)
         {
             var result = new List<T>();
 
@@ -913,11 +913,11 @@ namespace AzureStorage.Tables
             return result;
         }
 
-        public Task ExecuteAsync(TableQuery<T> rangeQuery, Action<IEnumerable<T>> result, Func<bool> stopCondition = null)
+        public Task ExecuteAsync(TableQuery<T> rangeQuery, Action<IEnumerable<T>> yieldResult, Func<bool> stopCondition = null)
         {
             return ExecuteQueryAsync(rangeQuery, null, itms =>
             {
-                result(itms);
+                yieldResult(itms);
 
                 if (stopCondition != null)
                 {

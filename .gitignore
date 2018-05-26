@@ -60,3 +60,4 @@ node_modules
 /src/BackOffice/wwwroot/fonts
 /src/BackOffice/wwwroot/output
 /src/BackOffice/wwwroot/js
+**/*sonar*

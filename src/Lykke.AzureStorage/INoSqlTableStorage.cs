@@ -56,7 +56,7 @@ namespace AzureStorage
         /// <summary>
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used
         /// </summary>
-        Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> item);
+        Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> replaceAction);
 
         /// <summary>
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used.
@@ -68,7 +68,7 @@ namespace AzureStorage
         /// <summary>
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used
         /// </summary>
-        Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item);
+        Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> mergeAction);
 
         /// <summary>
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used

@@ -219,9 +219,9 @@ namespace AzureStorage.Tables.Decorators
             return _storage.InsertOrMergeBatchAsync(cryptoItems);
         }
 
-        public async Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> item)
+        public async Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> replaceAction)
         {
-            var cryptoItem = await _storage.ReplaceAsync(partitionKey, rowKey, Map(item));
+            var cryptoItem = await _storage.ReplaceAsync(partitionKey, rowKey, Map(replaceAction));
 
             return Decrypt(cryptoItem);
         }
@@ -232,9 +232,9 @@ namespace AzureStorage.Tables.Decorators
             return _storage.ReplaceAsync(cryptoItem);
         }
 
-        public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
+        public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> mergeAction)
         {
-            var cryptoItem = await _storage.MergeAsync(partitionKey, rowKey, Map(item));
+            var cryptoItem = await _storage.MergeAsync(partitionKey, rowKey, Map(mergeAction));
 
             return Decrypt(cryptoItem);
         }

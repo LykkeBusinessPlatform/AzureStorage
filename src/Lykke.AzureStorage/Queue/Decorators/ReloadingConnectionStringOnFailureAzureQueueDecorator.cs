@@ -34,8 +34,8 @@ namespace AzureStorage.Queue.Decorators
         public Task ClearAsync() 
             => WrapAsync(x => x.ClearAsync());
 
-        public void RegisterTypes(params QueueType[] type) 
-            => Wrap(x => x.RegisterTypes(type));
+        public void RegisterTypes(params QueueType[] types) 
+            => Wrap(x => x.RegisterTypes(types));
 
         public Task<CloudQueueMessage> GetRawMessageAsync(int visibilityTimeoutSeconds = 30)
             => WrapAsync(x => x.GetRawMessageAsync(visibilityTimeoutSeconds));

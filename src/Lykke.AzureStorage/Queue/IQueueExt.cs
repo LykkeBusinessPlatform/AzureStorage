@@ -40,7 +40,7 @@ namespace AzureStorage.Queue
 
         Task ClearAsync();
 
-        void RegisterTypes(params QueueType[] type);
+        void RegisterTypes(params QueueType[] types);
 	    Task<CloudQueueMessage> GetRawMessageAsync(int visibilityTimeoutSeconds = 30);
 	    Task FinishRawMessageAsync(CloudQueueMessage msg);
 		Task ReleaseRawMessageAsync(CloudQueueMessage msg);

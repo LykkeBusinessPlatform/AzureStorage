@@ -46,7 +46,7 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         #region Fields
 
         private readonly IServiceProvider _serviceProvider;
-        private ConcurrentDictionary<Type, IStorageValueSerializer> _serializers;
+        private readonly ConcurrentDictionary<Type, IStorageValueSerializer> _serializers;
 
         #endregion
 

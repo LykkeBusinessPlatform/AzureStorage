@@ -11,19 +11,12 @@ namespace AzureStorage.Tables.Templates
     [Obsolete("Use AzureTableEntity. Will be removed in the future releases")]
     public class JsonTableEntity<T> : TableEntity 
     {
-        public T Instance;
+        public T Instance { get; set; }
 
         public string Data
         {
-            get
-            {
-                return JsonConvert.SerializeObject(Instance);
-            }
-            set
-            {
-                Instance = JsonConvert.DeserializeObject<T>(value);
-            }
+            get => JsonConvert.SerializeObject(Instance);
+            set => Instance = JsonConvert.DeserializeObject<T>(value);
         }
-
     }
 }

@@ -64,13 +64,13 @@ namespace AzureStorage.Tables.Decorators
         public Task InsertOrMergeBatchAsync(IEnumerable<TEntity> items) 
             => WrapAsync(() => _impl.InsertOrMergeBatchAsync(items), nameof(InsertOrMergeBatchAsync), items);
 
-        public Task<TEntity> ReplaceAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
+        public Task<TEntity> ReplaceAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> replaceAction)
         {
             object result = "Not read";
 
             return WrapAsync(() => _impl.ReplaceAsync(partitionKey, rowKey, entity =>
                 {
-                    var replacedItem = item(entity);
+                    var replacedItem = replaceAction(entity);
                     result = replacedItem;
                     return replacedItem;
                 }),
@@ -87,13 +87,13 @@ namespace AzureStorage.Tables.Decorators
                 exceptionsFilter: ex => !(ex is OptimisticConcurrencyException));
         }
 
-        public Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> item)
+        public Task<TEntity> MergeAsync(string partitionKey, string rowKey, Func<TEntity, TEntity> mergeAction)
         {
             object result = "Not read";
 
             return WrapAsync(() => _impl.MergeAsync(partitionKey, rowKey, entity =>
                 {
-                    var replacedItem = item(entity);
+                    var replacedItem = mergeAction(entity);
                     result = replacedItem;
                     return replacedItem;
                 }),

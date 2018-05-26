@@ -24,15 +24,14 @@ namespace AzureStorage.Queue
                 try
                 {
                     // if prehandler tells Skip the event - then we skip the event
-                    if (_preHandler != null)
-                        if (!await _preHandler(queueData.Data))
+                    if (_preHandler != null && !await _preHandler(queueData.Data))
+                    {
+                        if (_errorHandlers.ContainsKey(queueData.Data.GetType()))
                         {
-                            if (_errorHandlers.ContainsKey(queueData.Data.GetType()))
-                            {
-                                await _errorHandlers[queueData.Data.GetType()](queueData.Data);
-                            }
-                            continue;
+                            await _errorHandlers[queueData.Data.GetType()](queueData.Data);
                         }
+                        continue;
+                    }
 
                     //if was data is null => unregistered(unknown) type
                     if (queueData.Data == null)

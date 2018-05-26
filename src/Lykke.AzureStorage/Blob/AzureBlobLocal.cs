@@ -44,12 +44,12 @@ namespace AzureStorage.Blob
             return Task.Run(() => DateTime.UtcNow);
         }
 
-        public async Task<Stream> GetAsync(string blobContainer, string key)
+        public async Task<Stream> GetAsync(string container, string key)
         {
-            return await GetHttpReqestAsync(blobContainer, key);
+            return await GetHttpReqestAsync(container, key);
         }
 
-        public Task<string> GetAsTextAsync(string blobContainer, string key)
+        public Task<string> GetAsTextAsync(string container, string key)
         {
             throw new NotImplementedException();
         }
@@ -74,7 +74,7 @@ namespace AzureStorage.Blob
             throw new NotImplementedException();
         }
 
-        public Task DelBlobAsync(string blobContainer, string key)
+        public Task DelBlobAsync(string container, string key)
         {
             throw new NotImplementedException();
         }

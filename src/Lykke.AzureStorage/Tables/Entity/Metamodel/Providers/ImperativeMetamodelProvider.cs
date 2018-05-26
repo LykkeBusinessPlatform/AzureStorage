@@ -185,20 +185,14 @@ namespace Lykke.AzureStorage.Tables.Entity.Metamodel.Providers
         {
             if (propertyExpression.Body is UnaryExpression unaryExpression)
             {
-                if (unaryExpression.Operand is MemberExpression memberExpression)
-                {
-                    if (memberExpression.Member is PropertyInfo propertyInfo)
-                    {
-                        return propertyInfo;
-                    }
-                }
-            }
-            else if (propertyExpression.Body is MemberExpression memberExpression)
-            {
-                if (memberExpression.Member is PropertyInfo propertyInfo)
+                if (unaryExpression.Operand is MemberExpression memberExpression && memberExpression.Member is PropertyInfo propertyInfo)
                 {
                     return propertyInfo;
                 }
+            }
+            else if (propertyExpression.Body is MemberExpression memberExpression && memberExpression.Member is PropertyInfo propertyInfo)
+            {
+                return propertyInfo;
             }
 
             throw new ArgumentException("Expression should be property member expression", nameof(propertyExpression));

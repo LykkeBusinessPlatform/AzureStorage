@@ -137,9 +137,9 @@ namespace AzureStorage.Blob
             return Task.FromResult(result);
         }
 
-        public Task<string> GetAsTextAsync(string blobContainer, string key)
+        public Task<string> GetAsTextAsync(string container, string key)
         {
-            var result = this[blobContainer, key];
+            var result = this[container, key];
             using (var sr = new StreamReader(result))
             {
                 return Task.FromResult(sr.ReadToEnd());
@@ -181,9 +181,9 @@ namespace AzureStorage.Blob
                 GetBlob(container).Remove(key);
         }
 
-        public Task DelBlobAsync(string blobContainer, string key)
+        public Task DelBlobAsync(string container, string key)
         {
-            DelBlob(blobContainer, key);
+            DelBlob(container, key);
             return Task.FromResult(0);
         }
 

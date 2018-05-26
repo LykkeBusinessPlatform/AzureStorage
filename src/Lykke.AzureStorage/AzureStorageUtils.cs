@@ -47,8 +47,8 @@ namespace AzureStorage
 
         public static string PrintItem(object item)
         {
-            if (item is string)
-                return item as string;
+            if (item is string s)
+                return s;
 
             var stringBuilder = new StringBuilder();
 
@@ -56,7 +56,7 @@ namespace AzureStorage
                 var propertyInfo in
                     item.GetType().GetProperties().Where(propertyInfo => propertyInfo.CanRead && propertyInfo.CanWrite))
 
-                stringBuilder.Append(propertyInfo.Name + "=[" + propertyInfo.GetValue(item, null) + "];");
+                stringBuilder.Append($"{propertyInfo.Name}=[{propertyInfo.GetValue(item, null)}];");
 
             return stringBuilder.ToString();
         }
@@ -102,9 +102,7 @@ namespace AzureStorage
 			return filter == null
 				? tableStorage.WhereAsync(rangeQuery)
 				: tableStorage.WhereAsync(rangeQuery, filter);
-
 		}
-
 
 		public static Task<IEnumerable<T>> WhereAsync<T>(this INoSQLTableStorage<T> tableStorage, string partitionKey,
             int year, int month, Func<T, bool> filter = null)
@@ -132,7 +130,6 @@ namespace AzureStorage
             return tableStorage.ExecuteAsync(rangeQuery, chunk);
         }
 
-
         public static async Task<IEnumerable<T>> WhereAsync<T>(this INoSQLTableStorage<T> tableStorage,
             IEnumerable<string> partitionKeys, DateTime from, DateTime to,
             ToIntervalOption intervalOption, Func<T, bool> filter = null)
@@ -152,7 +149,6 @@ namespace AzureStorage
             return result;
         }
 
-
 		public static async Task<T> GetFirstOrDefaultAsync<T>(this INoSQLTableStorage<AzureMultiIndex> indexTable, string partitionKey, string rowKey, INoSQLTableStorage<T> dataTable) where T : class, ITableEntity, new()
 		{
 			var indexEntity = await indexTable.GetDataAsync(partitionKey, rowKey);
@@ -165,9 +161,7 @@ namespace AzureStorage
 				return null;
 
 			return await dataTable.GetDataAsync(indices[0].Pk, indices[0].Rk);
-
 		}
-
 
 		public static async Task<string> GenerateIdAsync(this INoSQLTableStorage<SetupEntity> tableStorage,
             string partitionKey, string rowKey, int fromId)
@@ -211,7 +205,6 @@ namespace AzureStorage
             }
         }
 
-
         public static Task<IEnumerable<T>> GetDataRowKeyOnlyAsync<T>(this INoSQLTableStorage<T> tableStorage,
             string rowKey)
             where T : ITableEntity, new()
@@ -220,13 +213,11 @@ namespace AzureStorage
             return tableStorage.WhereAsync(query);
         }
 
-
         public static Task<T> ReplaceAsync<T>(this INoSQLTableStorage<T> tableStorage, T item,
             Func<T, T> updateAction) where T : ITableEntity, new()
         {
             return tableStorage.ReplaceAsync(item.PartitionKey, item.RowKey, updateAction);
         }
-
 
         public static async Task<IEnumerable<T>> ScanAndGetList<T>(this INoSQLTableStorage<T> tableStorage,
             string partitionKey, Func<T, bool> condition)
@@ -350,7 +341,6 @@ namespace AzureStorage
                 return new TableQuery<T>().Where(sqlFilter);
             }
 
-
             public static TableQuery<T> MultiplePartitionKeys(params string[] partitionKeys)
             {
                 var partitionKeysString = new StringBuilder();
@@ -364,7 +354,6 @@ namespace AzureStorage
                 var sqlFilter = partitionKeysString.ToString();
                 return new TableQuery<T>().Where(sqlFilter);
             }
-
 
             public static TableQuery<T> MultipleRowKeys(string partitionKey, params string[] rowKeys)
             {
@@ -509,9 +498,8 @@ namespace AzureStorage
                 }
                 catch (AggregateException e)
                 {
-                    if (e.InnerExceptions[0] is StorageException)
+                    if (e.InnerExceptions[0] is StorageException se)
                     {
-                        var se = e.InnerExceptions[0] as StorageException;
                         if (se.RequestInformation.HttpStatusCode != Conflict)
                             throw;
                     }
@@ -766,16 +754,15 @@ namespace AzureStorage
 			if (indices.Length == 0)
 				return null;
 
-
 			var tasks = new List<Task<T>>();
-			foreach (var index in indices)
+
+		    foreach (var index in indices)
 			{
 				var task = dataTable.MergeAsync(index.Pk, index.Rk, replaceCallback);
 				tasks.Add(task);
 			}
 
 			await Task.WhenAll(tasks);
-
 
 			return tasks[0].GetAwaiter().GetResult();
 		}

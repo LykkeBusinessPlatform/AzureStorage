@@ -57,11 +57,11 @@ namespace AzureStorage.Queue
             }
         }
 
-        public void RegisterTypes(params QueueType[] type)
+        public void RegisterTypes(params QueueType[] types)
         {
         }
 
-	    public Task<CloudQueueMessage> GetRawMessageAsync(int visibilityTimeout)
+	    public Task<CloudQueueMessage> GetRawMessageAsync(int visibilityTimeoutSeconds = 30)
 	    {
 		    throw new System.NotImplementedException();
 	    }

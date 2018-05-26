@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Common.Log;
 using Lykke.AzureStorage.Tables.Paging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -53,10 +52,10 @@ namespace AzureStorage.Tables.Decorators
                 await InsertOrMergeAsync(entity);
         }
 
-        public async Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> item)
+        public async Task<T> ReplaceAsync(string partitionKey, string rowKey, Func<T, T> replaceAction)
         {
-            var result = await _table.ReplaceAsync(partitionKey, rowKey, item);
-            await _cache.ReplaceAsync(partitionKey, rowKey, item);
+            var result = await _table.ReplaceAsync(partitionKey, rowKey, replaceAction);
+            await _cache.ReplaceAsync(partitionKey, rowKey, replaceAction);
 
             return result;
         }
@@ -67,16 +66,16 @@ namespace AzureStorage.Tables.Decorators
             await _cache.ReplaceAsync(entity);
         }
 
-        public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> item)
+        public async Task<T> MergeAsync(string partitionKey, string rowKey, Func<T, T> mergeAction)
         {
-            var result = await _table.MergeAsync(partitionKey, rowKey, item);
-            await _cache.MergeAsync(partitionKey, rowKey, item);
+            var result = await _table.MergeAsync(partitionKey, rowKey, mergeAction);
+            await _cache.MergeAsync(partitionKey, rowKey, mergeAction);
             return result;
         }
 
-        public async Task InsertOrReplaceBatchAsync(IEnumerable<T> entites)
+        public async Task InsertOrReplaceBatchAsync(IEnumerable<T> entities)
         {
-            var myArray = entites as T[] ?? entites.ToArray();
+            var myArray = entities as T[] ?? entities.ToArray();
             await _table.InsertOrReplaceBatchAsync(myArray);
             await _cache.InsertOrReplaceBatchAsync(myArray);
         }
@@ -263,7 +262,7 @@ namespace AzureStorage.Tables.Decorators
         public Task<IEnumerable<T>> WhereAsync(TableQuery<T> rangeQuery, Func<T, bool> filter = null)
             => _table.WhereAsync(rangeQuery, filter);
 
-        public Task ExecuteAsync(TableQuery<T> rangeQuery, Action<IEnumerable<T>> yieldResult, Func<bool> stopCondition)
+        public Task ExecuteAsync(TableQuery<T> rangeQuery, Action<IEnumerable<T>> yieldResult, Func<bool> stopCondition = null)
             => _table.ExecuteAsync(rangeQuery, yieldResult, stopCondition);
 
 
