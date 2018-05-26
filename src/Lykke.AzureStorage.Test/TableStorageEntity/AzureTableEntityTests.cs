@@ -123,6 +123,7 @@ namespace Lykke.AzureStorage.Test.TableStorageEntity
         private class TestEntityWithUnknownTypeProperties : AzureTableEntity
         {
             public string StringProperty { get; set; }
+            public ComplexType InvalidTypeProperty { get; set; }
         }
 
         #endregion
