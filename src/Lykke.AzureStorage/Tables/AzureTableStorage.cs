@@ -128,15 +128,24 @@ namespace AzureStorage.Tables
         /// <param name="createTableAutomatically">Creates table automatically when performing an operation or not. Default is true</param>
         /// <returns></returns>
         public static INoSQLTableStorage<T> Create(
-            IReloadingManager<string> connectionStringManager,
-            string tableName,
-            ILogFactory logFactory,
-            TimeSpan? maxExecutionTimeout = null,
+            [NotNull] IReloadingManager<string> connectionStringManager,
+            [NotNull] string tableName,
+            [NotNull] ILogFactory logFactory,
+            [CanBeNull] TimeSpan? maxExecutionTimeout = null,
             int onModificationRetryCount = 10,
             int onGettingRetryCount = 10,
-            TimeSpan? retryDelay = null,
+            [CanBeNull] TimeSpan? retryDelay = null,
             bool createTableAutomatically = true)
         {
+            if (connectionStringManager == null)
+            {
+                throw new ArgumentNullException(nameof(connectionStringManager));
+            }
+            if (logFactory == null)
+            {
+                throw new ArgumentNullException(nameof(logFactory));
+            }
+
             NameValidator.ValidateTableName(tableName);
 
             async Task<INoSQLTableStorage<T>> MakeStorage(bool reload)
