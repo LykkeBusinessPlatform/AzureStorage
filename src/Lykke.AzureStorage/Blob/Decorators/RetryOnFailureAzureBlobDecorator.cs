@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Lykke.AzureStorage;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace AzureStorage.Blob.Decorators
 {
@@ -115,5 +116,8 @@ namespace AzureStorage.Blob.Decorators
 
         public async Task<List<string>> ListBlobsAsync(string container, string path)
             => await _retryService.RetryAsync(async () => await _impl.ListBlobsAsync(container, path), _onGettingRetryCount);
+
+        public async Task<BlobProperties> GetPropertiesAsync(string container, string key)
+            => await _retryService.RetryAsync(async () => await _impl.GetPropertiesAsync(container, key), _onGettingRetryCount);
     }
 }

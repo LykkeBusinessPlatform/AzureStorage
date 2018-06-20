@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Lykke.AzureStorage.Blob.Exceptions;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace AzureStorage
 {
@@ -50,5 +52,20 @@ namespace AzureStorage
         Task<IDictionary<string, string>> GetMetadataAsync(string container, string key);
 
         Task<List<string>> ListBlobsAsync(string container, string path);
+
+        /// <summary>Get blob properties.</summary>
+        /// <param name="container">Container name.</param>
+        /// <param name="key">Blob key.</param>
+        /// <returns>
+        ///      Returns <see cref="BlobProperties" /> object if blob exists.
+        /// </returns>
+        /// <exception cref="BlobNotFoundException">
+        ///     Thrown when blob cannot be found by specified
+        ///     <paramref name="container" /> and <paramref name="key" />.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///     Thrown when <paramref name="container" /> or <paramref name="key" /> is not provided.
+        /// </exception>
+        Task<BlobProperties> GetPropertiesAsync(string container, string key);
     }
 }

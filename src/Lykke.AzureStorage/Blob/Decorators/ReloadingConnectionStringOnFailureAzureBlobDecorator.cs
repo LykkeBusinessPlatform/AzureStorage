@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace AzureStorage.Blob.Decorators
 {
@@ -66,5 +67,8 @@ namespace AzureStorage.Blob.Decorators
 
         public Task<List<string>> ListBlobsAsync(string container, string path)
             => WrapAsync(x => x.ListBlobsAsync(container, path));
+
+        public Task<BlobProperties> GetPropertiesAsync(string container, string key)
+            => WrapAsync(x => x.GetPropertiesAsync(container, key));
     }
 }
