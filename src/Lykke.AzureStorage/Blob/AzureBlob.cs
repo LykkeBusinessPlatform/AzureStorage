@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage.Blob.Decorators;
 using JetBrains.Annotations;
+using Lykke.AzureStorage.Blob.Exceptions;
 using Lykke.SettingsReader;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -309,6 +310,25 @@ namespace AzureStorage.Blob
             await blockBlob.FetchAttributesAsync();
 
             return blockBlob.Metadata;
+        }
+
+        /// <inheritdoc />
+        public async Task<BlobProperties> GetPropertiesAsync(string container, string key)
+        {
+            if (string.IsNullOrWhiteSpace(container))
+                throw new ArgumentNullException(container);
+
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentNullException(key);              
+
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key);
+
+            if (blockBlob == null)
+                throw new BlobNotFoundException($"Blob with key: {key} not found in container: {container}.");
+
+            await blockBlob.FetchAttributesAsync();
+
+            return blockBlob.Properties;
         }
     }
 }

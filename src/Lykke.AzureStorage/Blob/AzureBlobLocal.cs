@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Common;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace AzureStorage.Blob
 {
@@ -159,6 +160,11 @@ namespace AzureStorage.Blob
         public Task<List<string>> ListBlobsAsync(string container, string path)
         {
             throw new NotImplementedException();
+        }
+
+        public Task<BlobProperties> GetPropertiesAsync(string container, string key)
+        {
+            return Task.FromResult(new BlobProperties());
         }
     }
 }
