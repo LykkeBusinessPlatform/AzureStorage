@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Common.Extensions;
 using Common.Log;
+using Lykke.Common.Log;
 using Lykke.SettingsReader;
 
 namespace AzureStorage.Tables.Templates
@@ -53,11 +55,16 @@ namespace AzureStorage.Tables.Templates
 
     public class NoSqlTableForSetup : NoSqlTableForSetupAbstract
     {
+        [Obsolete]
         public NoSqlTableForSetup(IReloadingManager<string> connStr, string tableName, ILog log) :
             base(new AzureSetupByPartition(connStr, tableName, log))
         {
         }
 
+        public NoSqlTableForSetup(IReloadingManager<string> connStr, string tableName, ILogFactory logFactory) :
+            base(new AzureSetupByPartition(connStr, tableName, logFactory))
+        {
+        }
     }
 
     public class NoSqlTableForSetupInMemory : NoSqlTableForSetupAbstract

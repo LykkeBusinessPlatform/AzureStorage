@@ -12,6 +12,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.AzureStorage.Tables
 {
+    [Obsolete("Register repository in the container, instead of INoSQLTableStorage")]
     public static class ServiceCollectionExtensons
     {
         public static IServiceCollection AddTableStorage<TTableEntity>(

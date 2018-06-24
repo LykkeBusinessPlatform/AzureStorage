@@ -14,6 +14,7 @@ using JetBrains.Annotations;
 using Lykke.AzureStorage;
 using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Paging;
+using Lykke.Common.Log;
 using Lykke.SettingsReader;
 
 using Microsoft.WindowsAzure.Storage;
@@ -119,6 +120,64 @@ namespace AzureStorage.Tables
         /// </remarks>
         /// <param name="connectionStringManager">Connection string reloading manager</param>
         /// <param name="tableName">Table's name</param>
+        /// <param name="logFactory">Log</param>
+        /// <param name="maxExecutionTimeout">Maximum execution time of single request (within retries). Default is 5 seconds</param>
+        /// <param name="onModificationRetryCount">Retries count when performs modification operation. Default value is 10</param>
+        /// <param name="onGettingRetryCount">Retries count when performs reading operation. Default value is 10</param>
+        /// <param name="retryDelay">Delay between retries. Default is 200 milliseconds</param>
+        /// <param name="createTableAutomatically">Creates table automatically when performing an operation or not. Default is true</param>
+        /// <returns></returns>
+        public static INoSQLTableStorage<T> Create(
+            [NotNull] IReloadingManager<string> connectionStringManager,
+            [NotNull] string tableName,
+            [NotNull] ILogFactory logFactory,
+            [CanBeNull] TimeSpan? maxExecutionTimeout = null,
+            int onModificationRetryCount = 10,
+            int onGettingRetryCount = 10,
+            [CanBeNull] TimeSpan? retryDelay = null,
+            bool createTableAutomatically = true)
+        {
+            if (connectionStringManager == null)
+            {
+                throw new ArgumentNullException(nameof(connectionStringManager));
+            }
+            if (logFactory == null)
+            {
+                throw new ArgumentNullException(nameof(logFactory));
+            }
+
+            NameValidator.ValidateTableName(tableName);
+
+            async Task<INoSQLTableStorage<T>> MakeStorage(bool reload)
+                => new AzureTableStorage<T>(
+                    reload ? await connectionStringManager.Reload() : connectionStringManager.CurrentValue,
+                    tableName,
+                    maxExecutionTimeout,
+                    createTableAutomatically);
+
+            return
+                new LogExceptionsAzureTableStorageDecorator<T>(
+                    new RetryOnFailureAzureTableStorageDecorator<T>(
+                        new ReloadingConnectionStringOnFailureAzureTableStorageDecorator<T>(MakeStorage),
+                        onModificationRetryCount,
+                        onGettingRetryCount,
+                        retryDelay),
+                    logFactory);
+        }
+
+        /// <summary>
+        /// Creates <see cref="AzureTableStorage{T}"/> with auto retries (only atomic operations) and connection string reloading.
+        /// </summary>
+        /// <remarks>
+        /// Not atomic methods without retries:
+        /// - GetDataByChunksAsync
+        /// - ScanDataAsync
+        /// - FirstOrNullViaScanAsync
+        /// - GetDataRowKeysOnlyAsync
+        /// - ExecuteAsync
+        /// </remarks>
+        /// <param name="connectionStringManager">Connection string reloading manager</param>
+        /// <param name="tableName">Table's name</param>
         /// <param name="log">Log</param>
         /// <param name="maxExecutionTimeout">Maximum execution time of single request (within retries). Default is 5 seconds</param>
         /// <param name="onModificationRetryCount">Retries count when performs modification operation. Default value is 10</param>
@@ -126,6 +185,7 @@ namespace AzureStorage.Tables
         /// <param name="retryDelay">Delay between retries. Default is 200 milliseconds</param>
         /// <param name="createTableAutomatically">Creates table automatically when performing an operation or not. Default is true</param>
         /// <returns></returns>
+        [Obsolete]
         public static INoSQLTableStorage<T> Create(
             IReloadingManager<string> connectionStringManager,
             string tableName,
@@ -175,6 +235,7 @@ namespace AzureStorage.Tables
         /// <param name="retryDelay">Delay between retries. Default is 200 milliseconds</param>
         /// <param name="createTableAutomatically">Creates table automatically when performing an operation or not. Default is true</param>
         /// <returns></returns>
+        [Obsolete]
         public static INoSQLTableStorage<T> CreateWithCache(
             IReloadingManager<string> connectionStringManager,
             string tableName,

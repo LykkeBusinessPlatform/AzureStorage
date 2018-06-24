@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Threading.Tasks;
 using Common.Log;
+using Lykke.Common.Log;
 using Lykke.SettingsReader;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -77,8 +78,14 @@ namespace AzureStorage.Tables.Templates
 
     public class AzureSetupByPartition : NoSqlSetupByPartition
     {
+        [Obsolete]
         public AzureSetupByPartition(IReloadingManager<string> connStr, string tableName, ILog log)
             : base(AzureTableStorage<SetupByPartitionEntity>.Create(connStr, tableName, log))
+        {
+        }
+
+        public AzureSetupByPartition(IReloadingManager<string> connStr, string tableName, ILogFactory logFactory)
+            : base(AzureTableStorage<SetupByPartitionEntity>.Create(connStr, tableName, logFactory))
         {
         }
     }

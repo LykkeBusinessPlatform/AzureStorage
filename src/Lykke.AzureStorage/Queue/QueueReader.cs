@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Common.Log;
 
 namespace AzureStorage.Queue
 {
@@ -10,7 +11,15 @@ namespace AzureStorage.Queue
     {
         private readonly IQueueExt _queueExt;
 
-        public QueueReader(IQueueExt queueExt, string componentName, int periodMs, ILog log) : base(componentName, periodMs, log)
+        [Obsolete]
+        public QueueReader(IQueueExt queueExt, string componentName, int periodMs, ILog log) : 
+            base(componentName, periodMs, log)
+        {
+            _queueExt = queueExt;
+        }
+
+        public QueueReader(IQueueExt queueExt, string componentName, TimeSpan period, ILogFactory logFactory) :
+            base(period, logFactory, componentName)
         {
             _queueExt = queueExt;
         }
