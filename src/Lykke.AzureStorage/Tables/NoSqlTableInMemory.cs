@@ -570,6 +570,16 @@ namespace AzureStorage.Tables
             return Task.FromResult(partitionKey.Rows.Take(n).Select(x => x.Value.Deserialize<T>()));
         }
 
+        public Task<T> GetTopRecordAsync(TableQuery<T> query)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<T>> GetTopRecordsAsync(TableQuery<T> query, int n)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task GetDataByChunksAsync(Func<IEnumerable<T>, Task> chunks)
         {
             var data = GetData();

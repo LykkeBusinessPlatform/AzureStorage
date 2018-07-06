@@ -294,6 +294,16 @@ namespace AzureStorage.Tables.Decorators
             return await _retryService.RetryAsync(async () => await _impl.GetTopRecordsAsync(partition, n), _onGettingRetryCount);
         }
 
+        public async Task<TEntity> GetTopRecordAsync(TableQuery<TEntity> query)
+        {
+            return await _retryService.RetryAsync(async () => await _impl.GetTopRecordAsync(query), _onGettingRetryCount);
+        }
+
+        public async Task<IEnumerable<TEntity>> GetTopRecordsAsync(TableQuery<TEntity> query, int n)
+        {
+            return await _retryService.RetryAsync(async () => await _impl.GetTopRecordsAsync(query, n), _onGettingRetryCount);
+        }
+
         public Task<IEnumerable<TEntity>> GetDataRowKeysOnlyAsync(IEnumerable<string> rowKeys)
         {
             return _impl.GetDataRowKeysOnlyAsync(rowKeys);

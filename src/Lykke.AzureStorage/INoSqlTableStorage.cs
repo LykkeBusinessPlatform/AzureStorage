@@ -275,14 +275,34 @@ namespace AzureStorage
         Task<IEnumerable<T>> GetDataAsync(string partition, Func<T, bool> filter = null);
 
         /// <summary>
-        /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used
+        /// Gets top record from partition.
         /// </summary>
+        /// <param name="partition">Partition key.</param>
+        /// <returns>Top record from provided partition or null if no records found.</returns>
         Task<T> GetTopRecordAsync(string partition);
 
         /// <summary>
-        /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used
+        /// Gets top n records from partition.
         /// </summary>
+        /// <param name="partition">Partition key.</param>
+        /// <param name="n">Number of records to be fetched.</param>
+        /// <returns>Top n records from provided partition or empty collection if no recors found.</returns>
         Task<IEnumerable<T>> GetTopRecordsAsync(string partition, int n);
+
+        /// <summary>
+        /// Gets top record found by provided query.
+        /// </summary>
+        /// <param name="query">Table query for record search.</param>
+        /// <returns>Top record found by provided query or null if no records found.</returns>
+        Task<T> GetTopRecordAsync(TableQuery<T> query);
+
+        /// <summary>
+        /// Gets n top records found by provided query if any.
+        /// </summary>
+        /// <param name="query">Table query for record search.</param>
+        /// <param name="n">Number of records to be fetched.</param>
+        /// <returns>Top n records found by provided query or null if no records found.</returns>
+        Task<IEnumerable<T>> GetTopRecordsAsync(TableQuery<T> query, int n);
 
         /// <summary>
         /// Not auto-retried, if <see cref="AzureTableStorage{T}"/> implementation is used, since this is not atomic operation

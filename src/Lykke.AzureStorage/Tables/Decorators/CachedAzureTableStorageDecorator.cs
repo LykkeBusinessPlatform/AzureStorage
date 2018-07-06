@@ -221,6 +221,11 @@ namespace AzureStorage.Tables.Decorators
         public async Task<IEnumerable<T>> GetTopRecordsAsync(string partition, int n)
             => await _cache.GetTopRecordsAsync(partition, n);
 
+        public async Task<T> GetTopRecordAsync(TableQuery<T> query) => await _cache.GetTopRecordAsync(query);
+
+        public async Task<IEnumerable<T>> GetTopRecordsAsync(TableQuery<T> query, int n)
+            => await _cache.GetTopRecordsAsync(query, n);
+
         public Task GetDataByChunksAsync(Func<IEnumerable<T>, Task> chunks)
             => _cache.GetDataByChunksAsync(chunks);
 

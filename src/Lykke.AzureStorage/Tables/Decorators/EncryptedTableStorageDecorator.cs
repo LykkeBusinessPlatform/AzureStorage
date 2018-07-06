@@ -16,7 +16,7 @@ namespace AzureStorage.Tables.Decorators
 {
     /// <summary>
     /// Wrapper on INoSQLTableStorage, uses symmetric encryption.
-    /// Does not support queries (TableQuery<T>) and batches(TableBatchOperation).
+    /// Does not support queries (TableQuery`T) and batches(TableBatchOperation).
     /// </summary>
     public class EncryptedTableStorageDecorator<T> : INoSQLTableStorage<T> where T : ITableEntity, new()
     {
@@ -392,6 +392,16 @@ namespace AzureStorage.Tables.Decorators
         public async Task<IEnumerable<T>> GetTopRecordsAsync(string partition, int n)
         {
             return (await _storage.GetTopRecordsAsync(partition, n)).Select(Decrypt);
+        }
+
+        public Task<T> GetTopRecordAsync(TableQuery<T> query)
+        {
+            throw new NotSupportedException($"{nameof(EncryptedTableStorageDecorator<T>)} does not support Queries");
+        }
+
+        public Task<IEnumerable<T>> GetTopRecordsAsync(TableQuery<T> query, int n)
+        {
+            throw new NotSupportedException($"{nameof(EncryptedTableStorageDecorator<T>)} does not support Queries");
         }
 
         public async Task<IEnumerable<T>> GetDataRowKeysOnlyAsync(IEnumerable<string> rowKeys)

@@ -148,6 +148,12 @@ namespace AzureStorage.Tables.Decorators
         public Task<IEnumerable<TEntity>> GetTopRecordsAsync(string partition, int n)
             => WrapAsync(x => x.GetTopRecordsAsync(partition, n));
 
+        public Task<TEntity> GetTopRecordAsync(TableQuery<TEntity> query)
+            => WrapAsync(x => x.GetTopRecordAsync(query));
+
+        public Task<IEnumerable<TEntity>> GetTopRecordsAsync(TableQuery<TEntity> query, int n)
+            => WrapAsync(x => x.GetTopRecordsAsync(query, n));
+
         public Task<IEnumerable<TEntity>> GetDataRowKeysOnlyAsync(IEnumerable<string> rowKeys)
             => WrapAsync(x => x.GetDataRowKeysOnlyAsync(rowKeys));
 
