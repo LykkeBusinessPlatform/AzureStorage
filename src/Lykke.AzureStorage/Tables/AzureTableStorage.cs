@@ -963,6 +963,19 @@ namespace AzureStorage.Tables
             return result.Take(n);
         }
 
+        public virtual async Task<T> GetTopRecordAsync(TableQuery<T> query)
+        {
+            var result = new List<T>();
+
+            await ExecuteQueryAsync(query, null, itms =>
+            {
+                result.AddRange(itms);
+                return false;
+            });
+
+            return result.FirstOrDefault();
+        }
+
         public async Task<IEnumerable<T>> WhereAsync(TableQuery<T> rangeQuery, Func<T, bool> filter = null)
         {
             var result = new List<T>();
