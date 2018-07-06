@@ -931,6 +931,7 @@ namespace AzureStorage.Tables
             return result;
         }
 
+        /// <inheritdoc />
         public virtual async Task<T> GetTopRecordAsync(string partition)
         {
             var rangeQuery = CompileTableQuery(partition);
@@ -945,6 +946,7 @@ namespace AzureStorage.Tables
             return result.FirstOrDefault();
         }
 
+        /// <inheritdoc />
         public virtual async Task<IEnumerable<T>> GetTopRecordsAsync(string partition, int n)
         {
             var rangeQuery = CompileTableQuery(partition);
@@ -953,16 +955,13 @@ namespace AzureStorage.Tables
             await ExecuteQueryAsync(rangeQuery, null, itms =>
             {
                 result.AddRange(itms);
-
-                if (n > result.Count)
-                    return true;
-
-                return false;
+                return n > result.Count;
             });
 
             return result.Take(n);
         }
 
+        /// <inheritdoc />
         public virtual async Task<T> GetTopRecordAsync(TableQuery<T> query)
         {
             var result = new List<T>();
@@ -974,6 +973,20 @@ namespace AzureStorage.Tables
             });
 
             return result.FirstOrDefault();
+        }
+
+        /// <inheritdoc />
+        public virtual async Task<IEnumerable<T>> GetTopRecordsAsync(TableQuery<T> query, int n)
+        {
+            var result = new List<T>();
+
+            await ExecuteQueryAsync(query, null, itms =>
+            {
+                result.AddRange(itms);
+                return n > result.Count;
+            });
+
+            return result.Take(n);
         }
 
         public async Task<IEnumerable<T>> WhereAsync(TableQuery<T> rangeQuery, Func<T, bool> filter = null)
