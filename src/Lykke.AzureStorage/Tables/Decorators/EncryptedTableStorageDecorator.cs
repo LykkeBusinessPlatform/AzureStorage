@@ -152,6 +152,20 @@ namespace AzureStorage.Tables.Decorators
             return mapFunc;
         }
 
+        private Func<IEnumerable<T>, bool> Map(Func<IEnumerable<T>, bool> func)
+        {
+            if (func == null)
+                return null;
+
+            Func<IEnumerable<T>, bool> mapFunc = entities =>
+            {
+                var data = entities.Select(Decrypt);
+                return func(data);
+            };
+
+            return mapFunc;
+        }
+
         private Action<IEnumerable<T>> Map(Action<IEnumerable<T>> func)
         {
             if (func == null)
@@ -357,6 +371,11 @@ namespace AzureStorage.Tables.Decorators
         public Task GetDataByChunksAsync(string partitionKey, Action<IEnumerable<T>> chunks)
         {
             return _storage.GetDataByChunksAsync(partitionKey, Map(chunks));
+        }
+
+        public Task GetDataByChunksAsync(string partitionKey, Func<IEnumerable<T>, bool> chunkHandler)
+        {
+            return _storage.GetDataByChunksAsync(partitionKey, Map(chunkHandler));
         }
 
         public Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)

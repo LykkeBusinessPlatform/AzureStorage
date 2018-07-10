@@ -259,6 +259,11 @@ namespace AzureStorage.Tables.Decorators
             return _impl.GetDataByChunksAsync(partitionKey, chunks);
         }
 
+        public Task GetDataByChunksAsync(string partitionKey, Func<IEnumerable<TEntity>, bool> chunkHandler)
+        {
+            return _impl.GetDataByChunksAsync(partitionKey, chunkHandler);
+        }
+
         public async Task<(IEnumerable<TEntity> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<TEntity> rangeQuery, string continuationToken)
         {
             return await _retryService.RetryAsync(async () => await _impl.GetDataWithContinuationTokenAsync(rangeQuery, continuationToken), _onGettingRetryCount);
