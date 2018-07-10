@@ -246,6 +246,11 @@ namespace AzureStorage
         Task GetDataByChunksAsync(string partitionKey, Action<IEnumerable<T>> chunks);
 
         /// <summary>
+        /// Fetches items from provided partition by chunks and stops fetching when chunk handler returns false.
+        /// </summary>
+        Task GetDataByChunksAsync(string partitionKey, Func<IEnumerable<T>, bool> chunkHandler);
+
+        /// <summary>
         /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used
         /// </summary>
         Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken);

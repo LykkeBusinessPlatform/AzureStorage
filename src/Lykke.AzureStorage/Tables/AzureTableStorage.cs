@@ -818,19 +818,25 @@ namespace AzureStorage.Tables
             return ExecuteAsync(query, chunks);
         }
 
+        /// <inheritdoc />
+        public Task GetDataByChunksAsync(string partitionKey, Func<IEnumerable<T>, bool> chunkHandler)
+        {
+            var query = CompileTableQuery(partitionKey);
+            return ExecuteQueryAsync(query, null, itms =>
+            {
+                return chunkHandler(itms);
+            });
+        }
+
         public async Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
         {
             var tableContinuationToken = !string.IsNullOrEmpty(continuationToken)
                 ? JsonConvert.DeserializeObject<TableContinuationToken>(Utils.HexToString(continuationToken))
                 : null;
-            
 
             var table = await GetTableAsync();
             var segment = await table.ExecuteQuerySegmentedAsync(rangeQuery, tableContinuationToken, GetRequestOptions(), null);
-            
-            
             tableContinuationToken = segment.ContinuationToken;
-
 
             continuationToken = tableContinuationToken != null
                 ? JsonConvert.SerializeObject(tableContinuationToken).StringToHex()
