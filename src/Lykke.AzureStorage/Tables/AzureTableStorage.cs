@@ -13,6 +13,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.AzureStorage;
 using Lykke.AzureStorage.Tables;
+using Lykke.AzureStorage.Tables.Exceptions;
 using Lykke.AzureStorage.Tables.Paging;
 using Lykke.Common.Log;
 using Lykke.SettingsReader;
@@ -828,11 +829,21 @@ namespace AzureStorage.Tables
             });
         }
 
+        /// <inheritdoc />
         public async Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
         {
-            var tableContinuationToken = !string.IsNullOrEmpty(continuationToken)
-                ? JsonConvert.DeserializeObject<TableContinuationToken>(Utils.HexToString(continuationToken))
-                : null;
+            TableContinuationToken tableContinuationToken = null;
+            if (!string.IsNullOrEmpty(continuationToken))
+            {
+                try
+                {
+                    tableContinuationToken = JsonConvert.DeserializeObject<TableContinuationToken>(Utils.HexToString(continuationToken));
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidContinuationTokenException("Invalid continuation token string", ex);
+                }
+            }
 
             var table = await GetTableAsync();
             var segment = await table.ExecuteQuerySegmentedAsync(rangeQuery, tableContinuationToken, GetRequestOptions(), null);
