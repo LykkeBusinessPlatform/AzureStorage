@@ -829,6 +829,7 @@ namespace AzureStorage.Tables
             });
         }
 
+        /// <inheritdoc />
         public async Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken)
         {
             TableContinuationToken tableContinuationToken = null;

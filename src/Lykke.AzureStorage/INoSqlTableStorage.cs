@@ -251,7 +251,8 @@ namespace AzureStorage
         Task GetDataByChunksAsync(string partitionKey, Func<IEnumerable<T>, bool> chunkHandler);
 
         /// <summary>
-        /// Auto retries, if <see cref="AzureTableStorage{T}"/> implementation is used
+        /// Fetches table items found by provided query by chunks with continuation token that allows to continue from where previous call stopped
+        /// when continuation token from the previous call is provided as an input parameter.
         /// </summary>
         Task<(IEnumerable<T> Entities, string ContinuationToken)> GetDataWithContinuationTokenAsync(TableQuery<T> rangeQuery, string continuationToken);
 
