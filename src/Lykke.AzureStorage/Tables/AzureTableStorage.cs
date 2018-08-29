@@ -1012,6 +1012,10 @@ namespace AzureStorage.Tables
             await ExecuteQueryAsync(rangeQuery, filter, itms =>
             {
                 result.AddRange(itms);
+                if (rangeQuery.TakeCount.HasValue && result.Count >= query.TakeCount)
+                {
+                    return false;
+                }
                 return true;
             });
             return result;
