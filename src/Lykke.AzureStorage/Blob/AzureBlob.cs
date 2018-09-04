@@ -276,7 +276,9 @@ namespace AzureStorage.Blob
 
             do
             {
-                var result = await containerRef.ListBlobsSegmentedAsync(prefix, true, BlobListingDetails.None, maxResultsCount,
+                var maxCount = maxResultsCount.HasValue ? maxResultsCount.Value - results.Count : (int?) null;
+
+                var result = await containerRef.ListBlobsSegmentedAsync(prefix, true, BlobListingDetails.None, maxCount,
                     continuationToken, GetRequestOptions(), null);
 
                 results.AddRange(result.Results
@@ -286,7 +288,7 @@ namespace AzureStorage.Blob
                 
                 continuationToken = result.ContinuationToken;
 
-            } while (continuationToken != null && (maxResultsCount == null || results.Count < maxResultsCount.Value));
+            } while (continuationToken != null && (!maxResultsCount.HasValue || results.Count < maxResultsCount.Value));
 
             return results;
         }
