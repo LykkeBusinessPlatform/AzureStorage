@@ -39,7 +39,36 @@ namespace AzureStorage
 
         string GetBlobUrl(string container, string key);
 
+        [Obsolete("This method requires Uri to be present in prefix. Use GetListOfBlobKeysByPrefixAsync instead.")]
         Task<IEnumerable<string>> FindNamesByPrefixAsync(string container, string prefix);
+
+        /// <summary>
+        ///     Delete all blobs starting with <paramref name="prefix" />.
+        ///     This method is useful for deleting folders.
+        ///     Specify folder as prefix and all blobs and folders inside it would be deleted.
+        /// </summary>
+        /// <param name="container">Container name.</param>
+        /// <param name="prefix">
+        ///     Blob prefix.
+        ///     Note it should not contain storage Uri. It is just a part of name.
+        ///     You can specify folder name as prefix to delete it.
+        /// </param>
+        /// <returns>Completed task if operation succeeded.</returns>
+        Task DeleteBlobsByPrefixAsync(string container, string prefix);
+
+        /// <summary>
+        ///     Get all blob names, starting with <paramref name="prefix" />.
+        /// </summary>
+        /// <param name="container">Container name.</param>
+        /// <param name="prefix"></param>
+        ///     Blob prefix.
+        ///     Note it should not contain storage Uri. It is just a part of name.
+        ///     You can specify folder name as prefix to get all blobs in it.
+        /// <param name="maxResultsCount">Maximum number of blobs to be returned.</param>
+        /// <returns>Collection of blob names, starting with <paramref name="prefix" />.</returns>
+        Task<IEnumerable<string>> GetListOfBlobKeysByPrefixAsync(string container, string prefix,
+            int? maxResultsCount = null);
+
 
         Task<IEnumerable<string>> GetListOfBlobsAsync(string container);
         Task<IEnumerable<string>> GetListOfBlobKeysAsync(string container, int? maxResultsCount = null);

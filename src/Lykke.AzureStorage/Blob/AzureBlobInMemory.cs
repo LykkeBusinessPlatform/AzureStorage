@@ -158,6 +158,33 @@ namespace AzureStorage.Blob
                 return Task.Run(() => GetBlob(container).Where(itm => itm.Key.StartsWith(prefix)).Select(itm => itm.Key));
         }
 
+        public Task DeleteBlobsByPrefixAsync(string container, string prefix)
+        {
+            lock (_lockObject)
+            {
+                return Task.Run(() =>
+                {
+                    var blobs = GetBlob(container);
+                    var keysToDelete = blobs
+                        .Where(itm => itm.Key.StartsWith(prefix))
+                        .Select(itm => itm.Key);
+
+                    foreach (var key in keysToDelete) blobs.Remove(key);
+                });
+            }
+        }
+
+        public Task<IEnumerable<string>> GetListOfBlobKeysByPrefixAsync(string container, string prefix, int? maxResultsCount = null)
+        {
+            lock (_lockObject)
+                return Task.Run(() =>
+                {
+                    var startWithPrefix = GetBlob(container).Where(itm => itm.Key.StartsWith(prefix));
+                    startWithPrefix = maxResultsCount == null ? startWithPrefix : startWithPrefix.Take((int)maxResultsCount);
+                    return startWithPrefix.Select(itm => itm.Key);
+                });
+        }
+
         public Task<IEnumerable<string>> GetListOfBlobsAsync(string container)
         {
             lock (_lockObject)

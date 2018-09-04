@@ -47,6 +47,13 @@ namespace AzureStorage.Blob.Decorators
         public Task<IEnumerable<string>> FindNamesByPrefixAsync(string container, string prefix)
             => WrapAsync(x => x.FindNamesByPrefixAsync(container, prefix));
 
+        public Task DeleteBlobsByPrefixAsync(string container, string prefix)
+            => WrapAsync(x => x.DeleteBlobsByPrefixAsync(container, prefix));
+
+        public Task<IEnumerable<string>> GetListOfBlobKeysByPrefixAsync(string container, string prefix,
+                int? maxResultsCount = null)
+            => WrapAsync(x => x.GetListOfBlobKeysByPrefixAsync(container, prefix, maxResultsCount));
+
         public Task<IEnumerable<string>> GetListOfBlobsAsync(string container)
             => WrapAsync(x => x.GetListOfBlobsAsync(container));
 

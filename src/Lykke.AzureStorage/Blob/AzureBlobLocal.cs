@@ -65,6 +65,17 @@ namespace AzureStorage.Blob
             throw new NotImplementedException();
         }
 
+        public Task DeleteBlobsByPrefixAsync(string container, string prefix)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<string>> GetListOfBlobKeysByPrefixAsync(string container, string prefix,
+            int? maxResultsCount = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<IEnumerable<string>> GetListOfBlobsAsync(string container)
         {
             throw new NotImplementedException();

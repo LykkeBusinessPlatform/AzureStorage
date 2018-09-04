@@ -209,6 +209,7 @@ namespace AzureStorage.Blob
             return blockBlob.Uri.AbsoluteUri;
         }
 
+        [Obsolete("This method requires Uri to be present in prefix. Use GetListOfBlobKeysByPrefixAsync instead.")]
         public async Task<IEnumerable<string>> FindNamesByPrefixAsync(string container, string prefix)
         {
             BlobContinuationToken continuationToken = null;
@@ -225,6 +226,67 @@ namespace AzureStorage.Blob
                         results.Add(listBlobItem.Uri.ToString());
                 }
             } while (continuationToken != null);
+
+            return results;
+        }
+
+        /// <inheritdoc />
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="container"/> is null or whitespace.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="prefix"/> is null or whitespace.</exception>
+        public async Task DeleteBlobsByPrefixAsync(string container, string prefix)
+        {
+            if (string.IsNullOrWhiteSpace(container))
+                throw new ArgumentNullException(nameof(container));
+
+            if (string.IsNullOrWhiteSpace(prefix))
+                throw new ArgumentNullException(nameof(prefix));
+
+            BlobContinuationToken continuationToken = null;
+            var containerRef = GetContainerReference(container);
+
+            do
+            {
+                var result = await containerRef.ListBlobsSegmentedAsync(prefix, true, BlobListingDetails.None, null,
+                    continuationToken, GetRequestOptions(), null);
+
+                continuationToken = result.ContinuationToken;
+
+                await Task.WhenAll(result.Results
+                    .Select(item => (item as CloudBlob)?.DeleteIfExistsAsync())
+                    .Where(task => task != null)
+                );
+
+            } while (continuationToken != null);
+        }
+
+        /// <inheritdoc />
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="container"/> is null or whitespace.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="prefix"/> is null or whitespace.</exception>
+        public async Task<IEnumerable<string>> GetListOfBlobKeysByPrefixAsync(string container, string prefix, int? maxResultsCount = null)
+        {
+            if (string.IsNullOrWhiteSpace(container))
+                throw new ArgumentNullException(nameof(container));
+
+            if (string.IsNullOrWhiteSpace(prefix))
+                throw new ArgumentNullException(nameof(prefix));
+
+            BlobContinuationToken continuationToken = null;
+            var results = new List<string>();
+            var containerRef = GetContainerReference(container);
+
+            do
+            {
+                var result = await containerRef.ListBlobsSegmentedAsync(prefix, true, BlobListingDetails.None, maxResultsCount,
+                    continuationToken, GetRequestOptions(), null);
+
+                results.AddRange(result.Results
+                    .Select(item => (item as CloudBlob)?.Name)
+                    .Where(item => item != null)
+                );
+                
+                continuationToken = result.ContinuationToken;
+
+            } while (continuationToken != null && (maxResultsCount == null || results.Count < maxResultsCount.Value));
 
             return results;
         }

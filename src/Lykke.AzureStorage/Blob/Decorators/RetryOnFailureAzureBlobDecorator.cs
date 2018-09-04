@@ -99,6 +99,13 @@ namespace AzureStorage.Blob.Decorators
         public async Task<IEnumerable<string>> FindNamesByPrefixAsync(string container, string prefix) 
             => await _retryService.RetryAsync(async () => await _impl.FindNamesByPrefixAsync(container, prefix), _onGettingRetryCount);
 
+        public async Task DeleteBlobsByPrefixAsync(string container, string prefix)
+            => await _retryService.RetryAsync(async () => await _impl.DeleteBlobsByPrefixAsync(container, prefix), _onModificationsRetryCount);
+
+        public async Task<IEnumerable<string>> GetListOfBlobKeysByPrefixAsync(string container, string prefix,
+            int? maxResultsCount = null)
+            => await _retryService.RetryAsync(async () => await _impl.GetListOfBlobKeysByPrefixAsync(container, prefix, maxResultsCount), _onGettingRetryCount);
+
         public async Task<IEnumerable<string>> GetListOfBlobsAsync(string container) 
             => await _retryService.RetryAsync(async () => await _impl.GetListOfBlobsAsync(container), _onGettingRetryCount);
 
