@@ -22,6 +22,7 @@ namespace AzureStorage.Queue
         private readonly CloudStorageAccount _storageAccount;
         private bool _queueCreated;
         private readonly TimeSpan _maxExecutionTime;
+        private IQueueExt _queueExtImplementation;
 
         public string Name => _queueName;
 
@@ -91,12 +92,23 @@ namespace AzureStorage.Queue
             };
         }
 
-        public async Task PutRawMessageAsync(string msg)
+        public Task PutRawMessageAsync(string msg)
         {
-            var queue = await GetQueue();
-            await queue.AddMessageAsync(new CloudQueueMessage(msg), null, null, GetRequestOptions(), null);
+            return InnerPutRawMessageAsync(msg, null);
         }
 
+        public Task PutRawMessageAsync(string msg, TimeSpan initialVisibilityDelay)
+        {
+            return InnerPutRawMessageAsync(msg, initialVisibilityDelay);
+        }
+
+        private async Task InnerPutRawMessageAsync(string msg, TimeSpan? initialVisibilityDelay)
+        {
+            var queue = await GetQueue();
+            
+            await queue.AddMessageAsync(new CloudQueueMessage(msg), null, initialVisibilityDelay, GetRequestOptions(), null);
+        }
+        
         public async Task FinishMessageAsync(QueueData token)
         {
             if (token.Token is CloudQueueMessage cloudQueueMessage)
@@ -107,16 +119,32 @@ namespace AzureStorage.Queue
             }
         }
         
-        public async Task<string> PutMessageAsync(object itm)
+        public Task<string> PutMessageAsync(object itm)
+        {
+            return InnerPutMessageAsync(itm, null);
+        }
+        
+        public Task<string> PutMessageAsync(object itm, TimeSpan initialVisibilityDelay)
+        {
+            return InnerPutMessageAsync(itm, initialVisibilityDelay);
+        }
+        
+        public async Task<string> InnerPutMessageAsync(object itm, TimeSpan? initialVisibilityDelay)
         {
             var msg = SerializeObject(itm);
+            
             if (msg == null)
+            {
                 return string.Empty;
+            }
+            else
+            {
+                var queue = await GetQueue();
 
-            var queue = await GetQueue();
-
-            await queue.AddMessageAsync(new CloudQueueMessage(msg), null, null, GetRequestOptions(), null);
-            return msg;
+                await queue.AddMessageAsync(new CloudQueueMessage(msg), null, initialVisibilityDelay, GetRequestOptions(), null);
+                
+                return msg;
+            }
         }
 
         public async Task<object[]> GetMessagesAsync(int maxCount)

@@ -31,7 +31,9 @@ namespace AzureStorage.Queue
         string Name { get; }
 
         Task PutRawMessageAsync(string msg);
+        Task PutRawMessageAsync(string msg, TimeSpan initialVisibilityDelay);
 		Task<string> PutMessageAsync(object itm);
+        Task<string> PutMessageAsync(object itm, TimeSpan initialVisibilityDelay);
 
         Task<QueueData> GetMessageAsync();
         Task FinishMessageAsync(QueueData token);
