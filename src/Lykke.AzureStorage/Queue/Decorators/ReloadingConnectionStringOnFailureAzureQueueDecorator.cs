@@ -19,8 +19,14 @@ namespace AzureStorage.Queue.Decorators
         public Task PutRawMessageAsync(string msg)
             => WrapAsync(x => x.PutRawMessageAsync(msg));
 
+        public Task PutRawMessageAsync(string msg, TimeSpan initialVisibilityDelay)
+            => WrapAsync(x => x.PutRawMessageAsync(msg, initialVisibilityDelay));
+
         public Task<string> PutMessageAsync(object itm) 
             => WrapAsync(x => x.PutMessageAsync(itm));
+
+        public Task<string> PutMessageAsync(object itm, TimeSpan initialVisibilityDelay)
+            => WrapAsync(x => x.PutMessageAsync(itm, initialVisibilityDelay));
 
         public Task<QueueData> GetMessageAsync()
             => WrapAsync(x => x.GetMessageAsync());

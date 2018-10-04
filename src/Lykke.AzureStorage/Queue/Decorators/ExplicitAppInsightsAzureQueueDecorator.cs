@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Queue;
 
 namespace AzureStorage.Queue.Decorators
@@ -24,8 +25,14 @@ namespace AzureStorage.Queue.Decorators
         public Task PutRawMessageAsync(string msg)
             => WrapAsync(() => _impl.PutRawMessageAsync(msg), Name);
 
+        public Task PutRawMessageAsync(string msg, TimeSpan initialVisibilityDelay)
+            => WrapAsync(() => _impl.PutRawMessageAsync(msg, initialVisibilityDelay), Name);
+
         public Task<string> PutMessageAsync(object itm)
             => WrapAsync(() => _impl.PutMessageAsync(itm), Name);
+
+        public Task<string> PutMessageAsync(object itm, TimeSpan initialVisibilityDelay)
+            => WrapAsync(() => _impl.PutMessageAsync(itm, initialVisibilityDelay), Name);
 
         public Task<QueueData> GetMessageAsync()
             => WrapAsync(() => _impl.GetMessageAsync(), Name);

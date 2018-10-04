@@ -30,8 +30,25 @@ namespace AzureStorage.Queue
         /// <summary>Queue name</summary>
         string Name { get; }
 
+        /// <summary>
+        ///    Adds message to the queue.
+        /// </summary>
         Task PutRawMessageAsync(string msg);
-		Task<string> PutMessageAsync(object itm);
+        
+        /// <summary>
+        ///    Adds message to the queue with specified initial visibility delay.
+        /// </summary>
+        Task PutRawMessageAsync(string msg, TimeSpan initialVisibilityDelay);
+		
+        /// <summary>
+        ///    Adds message to the queue.
+        /// </summary>
+        Task<string> PutMessageAsync(object itm);
+        
+        /// <summary>
+        ///    Adds message to the queue with specified initial visibility delay.
+        /// </summary>
+        Task<string> PutMessageAsync(object itm, TimeSpan initialVisibilityDelay);
 
         Task<QueueData> GetMessageAsync();
         Task FinishMessageAsync(QueueData token);

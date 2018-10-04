@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Queue;
@@ -17,13 +18,23 @@ namespace AzureStorage.Queue
 			return Task.CompletedTask;
 		}
 
-		public Task<string> PutMessageAsync(object itm)
+        public Task PutRawMessageAsync(string msg, TimeSpan initialVisibilityDelay)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> PutMessageAsync(object itm)
         {
             PutMessage(itm);
             return Task.FromResult("");
-		}	
+		}
 
-		public Task<QueueData> GetMessageAsync()
+        public Task<string> PutMessageAsync(object itm, TimeSpan initialVisibilityDelay)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<QueueData> GetMessageAsync()
         {
             var item = GetMessage();
 
