@@ -22,8 +22,7 @@ namespace AzureStorage.Queue
         private readonly CloudStorageAccount _storageAccount;
         private bool _queueCreated;
         private readonly TimeSpan _maxExecutionTime;
-        private IQueueExt _queueExtImplementation;
-
+        
         public string Name => _queueName;
 
         private AzureQueueExt(string conectionString, string queueName, TimeSpan? maxExecutionTimeout = null)
