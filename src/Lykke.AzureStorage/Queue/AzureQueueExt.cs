@@ -129,7 +129,7 @@ namespace AzureStorage.Queue
             return InnerPutMessageAsync(itm, initialVisibilityDelay);
         }
         
-        public async Task<string> InnerPutMessageAsync(object itm, TimeSpan? initialVisibilityDelay)
+        private async Task<string> InnerPutMessageAsync(object itm, TimeSpan? initialVisibilityDelay)
         {
             var msg = SerializeObject(itm);
             
