@@ -406,6 +406,11 @@ namespace AzureStorage.Blob
         /// <inheritdoc />
         public async Task ReleaseLeaseAsync(string container, string key, string leaseId)
         {
+            if (string.IsNullOrWhiteSpace(leaseId))
+            {
+                throw new ArgumentException("Should not be null, empty, or whitespace", nameof(leaseId));
+            }
+            
             var blockBlob = await GetBlockBlobReferenceAsync(container, key);
 
             await blockBlob.ReleaseLeaseAsync(new AccessCondition
@@ -417,6 +422,11 @@ namespace AzureStorage.Blob
         /// <inheritdoc />
         public async Task RenewLeaseAsync(string container, string key, string leaseId)
         {
+            if (string.IsNullOrWhiteSpace(leaseId))
+            {
+                throw new ArgumentException("Should not be null, empty, or whitespace", nameof(leaseId));
+            }
+            
             var blockBlob = await GetBlockBlobReferenceAsync(container, key);
             
             await blockBlob.RenewLeaseAsync(new AccessCondition
