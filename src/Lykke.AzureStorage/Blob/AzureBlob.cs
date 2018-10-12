@@ -394,5 +394,35 @@ namespace AzureStorage.Blob
 
             return blockBlob.Properties;
         }
+
+        /// <inheritdoc />
+        public async Task<string> AcquireLeaseAsync(string container, string key, TimeSpan? leaseTime, string proposedLeaseId = null)
+        {
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key, createIfNotExists: true);
+
+            return await blockBlob.AcquireLeaseAsync(leaseTime, proposedLeaseId);
+        }
+
+        /// <inheritdoc />
+        public async Task ReleaseLeaseAsync(string container, string key, string leaseId)
+        {
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key);
+
+            await blockBlob.ReleaseLeaseAsync(new AccessCondition
+            {
+                LeaseId = leaseId
+            });
+        }
+
+        /// <inheritdoc />
+        public async Task RenewLeaseAsync(string container, string key, string leaseId)
+        {
+            var blockBlob = await GetBlockBlobReferenceAsync(container, key);
+            
+            await blockBlob.RenewLeaseAsync(new AccessCondition
+            {
+                LeaseId = leaseId
+            });
+        }
     }
 }
