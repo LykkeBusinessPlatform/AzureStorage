@@ -108,7 +108,7 @@ namespace AzureStorage
         /// <param name="leaseTime">
         ///    A <see cref="System.TimeSpan"/> representing the span of time for which to acquire the lease,
         ///    which will be rounded down to seconds. If <c>null</c>, an infinite lease will be acquired. If not null, this must be
-        ///    greater than zero.
+        ///    15 to 60 seconds.
         /// </param>
         /// <param name="proposedLeaseId">
         ///    A string representing the proposed lease ID for the new lease, or <c>null</c> if no lease id is proposed.
