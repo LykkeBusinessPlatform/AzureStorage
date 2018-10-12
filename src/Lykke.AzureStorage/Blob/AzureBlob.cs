@@ -400,6 +400,11 @@ namespace AzureStorage.Blob
         {
             var blockBlob = await GetBlockBlobReferenceAsync(container, key, createIfNotExists: true);
 
+            if (!await blockBlob.ExistsAsync())
+            {
+                await blockBlob.UploadTextAsync(string.Empty);
+            }
+            
             return await blockBlob.AcquireLeaseAsync(leaseTime, proposedLeaseId);
         }
 
