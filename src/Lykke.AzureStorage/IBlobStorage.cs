@@ -95,5 +95,55 @@ namespace AzureStorage
         ///     Thrown when <paramref name="container" /> or <paramref name="key" /> is not provided.
         /// </exception>
         Task<BlobProperties> GetPropertiesAsync(string container, string key);
+
+        /// <summary>
+        ///    Acquires blob lease. Creates empty blob if not exists.
+        /// </summary>
+        /// <param name="container">
+        ///    Container name.
+        /// </param>
+        /// <param name="key">
+        ///    Blob key.
+        /// </param>
+        /// <param name="leaseTime">
+        ///    A <see cref="System.TimeSpan"/> representing the span of time for which to acquire the lease,
+        ///    which will be rounded down to seconds. If <c>null</c>, an infinite lease will be acquired. If not null, this must be
+        ///    15 to 60 seconds.
+        /// </param>
+        /// <param name="proposedLeaseId">
+        ///    A string representing the proposed lease ID for the new lease, or <c>null</c> if no lease id is proposed.
+        /// </param>
+        /// <returns>
+        ///    A <see cref="Task{T}"/> object that results in the id of the acquired lease.
+        /// </returns>
+        Task<string> AcquireLeaseAsync(string container, string key, TimeSpan? leaseTime, string proposedLeaseId = null);
+
+        /// <summary>
+        ///    Releases blob lease.
+        /// </summary>
+        /// <param name="container">
+        ///    Container name.
+        /// </param>
+        /// <param name="key">
+        ///    Blob key.
+        /// </param>
+        /// <param name="leaseId">
+        ///    Lease id.
+        /// </param>
+        Task ReleaseLeaseAsync(string container, string key, string leaseId);
+        
+        /// <summary>
+        ///    Renews blob lease.
+        /// </summary>
+        /// <param name="container">
+        ///    Container name.
+        /// </param>
+        /// <param name="key">
+        ///    Blob key.
+        /// </param>
+        /// <param name="leaseId">
+        ///    Lease id.
+        /// </param>
+        Task RenewLeaseAsync(string container, string key, string leaseId);
     }
 }

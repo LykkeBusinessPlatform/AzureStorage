@@ -126,5 +126,14 @@ namespace AzureStorage.Blob.Decorators
 
         public async Task<BlobProperties> GetPropertiesAsync(string container, string key)
             => await _retryService.RetryAsync(async () => await _impl.GetPropertiesAsync(container, key), _onGettingRetryCount);
+        
+        public async Task<string> AcquireLeaseAsync(string container, string key, TimeSpan? leaseTime, string proposedLeaseId = null)
+            => await _retryService.RetryAsync(async () => await _impl.AcquireLeaseAsync(container, key, leaseTime, proposedLeaseId), _onModificationsRetryCount);
+
+        public async Task ReleaseLeaseAsync(string container, string key, string leaseId)
+            => await _retryService.RetryAsync(async () => await _impl.ReleaseLeaseAsync(container, key, leaseId), _onModificationsRetryCount);
+
+        public async Task RenewLeaseAsync(string container, string key, string leaseId)
+            => await _retryService.RetryAsync(async () => await _impl.RenewLeaseAsync(container, key, leaseId), _onModificationsRetryCount);
     }
 }

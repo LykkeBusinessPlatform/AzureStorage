@@ -251,5 +251,20 @@ namespace AzureStorage.Blob
         {
             return Task.FromResult(new BlobProperties());
         }
+
+        public Task<string> AcquireLeaseAsync(string container, string key, TimeSpan? leaseTime, string proposedLeaseId = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task ReleaseLeaseAsync(string container, string key, string leaseId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RenewLeaseAsync(string container, string key, string leaseId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
