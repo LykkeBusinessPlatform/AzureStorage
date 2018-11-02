@@ -529,10 +529,14 @@ namespace AzureStorage.Tables
                     return true;
                 }
                 catch (StorageException e) when (
-                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.UpdateConditionNotSatisfied || 
-                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityAlreadyExists || 
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.UpdateConditionNotSatisfied ||
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityAlreadyExists ||
                     e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
                 {
+                }
+                finally
+                {
+                    entity.ETag = null;
                 }
             }
         }
