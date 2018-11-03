@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.PropertyAccess;
 using Lykke.AzureStorage.Tables.Entity.Serializers;
@@ -43,7 +44,7 @@ namespace Lykke.AzureStorage.Tables
 
         void ITableEntity.ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
         {
-            foreach(var propertyAccessor in EntityPropertyAccessorsManager.Instance.GetPropertyAccessors(GetType()))
+            foreach (var propertyAccessor in EntityPropertyAccessorsManager.Instance.GetPropertyAccessors(GetType()))
             {
                 // Property exists in the object, but ommited in the storage. Probaby it's new property,
                 // so just ignore it, to support old data loading.
@@ -85,9 +86,13 @@ namespace Lykke.AzureStorage.Tables
         /// when setter of the value type property is called and the value is changed.
         /// Method is thread safe.
         /// </summary>
-        /// <param name="propertyName"></param>
-        protected void MarkValueTypePropertyAsDirty(string propertyName)
+        /// <param name="propertyName">The name of the property that was changed.</param>
+        /// <exception cref="ArgumentNullException">The <paramref name="propertyName"/> is <c>null</c>.</exception>
+        protected void MarkValueTypePropertyAsDirty([CallerMemberName] string propertyName = null)
         {
+            if (string.IsNullOrWhiteSpace(propertyName))
+                throw new ArgumentNullException(nameof(propertyName));
+
             _valueTypeMergingStrategy.MarkValueTypePropertyAsDirty(propertyName);
         }
     }
