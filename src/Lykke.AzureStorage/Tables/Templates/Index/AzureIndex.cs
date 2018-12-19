@@ -96,9 +96,11 @@ namespace AzureStorage.Tables.Templates.Index
 
 		    foreach (var item in data)
 		    {
-		        if (!item.Pk.IsValidPartitionOrRowKey() || !item.Rk.IsValidPartitionOrRowKey())
-		            throw new ArgumentException($"Either PartitionKey '{item.Pk}' or RowKey '{item.Rk}' are invalid");
-		    }
+		        if (!item.Pk.IsValidPartitionOrRowKey())
+		            throw new ArgumentException($"PartitionKey '{item.Pk}' is invalid");
+                if (!item.Rk.IsValidPartitionOrRowKey())
+                    throw new ArgumentException($"RowKey '{item.Rk}' is invalid");
+            }
 
 			Data = data.ToJson();
 		}
