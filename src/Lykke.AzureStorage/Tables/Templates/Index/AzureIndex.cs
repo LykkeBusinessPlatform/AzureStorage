@@ -85,17 +85,25 @@ namespace AzureStorage.Tables.Templates.Index
 
 	public class AzureMultiIndex : TableEntity
 	{
-
+		private static readonly AzureIndexData[] _emptyArray = Array.Empty<AzureIndexData>();
 
 		public string Data { get; set; }
 
 		public void SetData(IEnumerable<AzureIndexData> data)
 		{
+			if (data == null || !data.Any())
+				throw new ArgumentNullException($"{nameof(data)} can't be empty");
+
+			foreach (var item in data)
+			{
+				if (!item.Pk.IsValidPartitionOrRowKey())
+					throw new ArgumentException($"PartitionKey '{item.Pk}' is invalid");
+				if (!item.Rk.IsValidPartitionOrRowKey())
+					throw new ArgumentException($"RowKey '{item.Rk}' is invalid");
+			}
+
 			Data = data.ToJson();
 		}
-
-
-		private static AzureIndexData[] _emptyArray = new AzureIndexData[0];
 
 		public AzureIndexData[] GetData()
 		{
@@ -105,7 +113,6 @@ namespace AzureStorage.Tables.Templates.Index
 			}
 			catch (Exception)
 			{
-
 				return _emptyArray;
 			}
 		}
