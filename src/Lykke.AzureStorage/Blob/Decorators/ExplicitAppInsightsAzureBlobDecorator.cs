@@ -92,6 +92,9 @@ namespace AzureStorage.Blob.Decorators
         public async Task RenewLeaseAsync(string container, string key, string leaseId)
             => await WrapAsync(async () => await _impl.RenewLeaseAsync(container, key, leaseId), container);
 
+        public async Task SetContainerPermissionsAsync(string container, BlobContainerPublicAccessType publicAccessType)
+            => await WrapAsync(async () => await _impl.SetContainerPermissionsAsync(container, publicAccessType), container);
+
         #endregion
     }
 }

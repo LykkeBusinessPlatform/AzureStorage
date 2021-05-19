@@ -86,5 +86,8 @@ namespace AzureStorage.Blob.Decorators
 
         public Task RenewLeaseAsync(string container, string key, string leaseId)
             => WrapAsync(x => x.RenewLeaseAsync(container, key, leaseId));
+
+        public Task SetContainerPermissionsAsync(string container, BlobContainerPublicAccessType publicAccessType)
+            => WrapAsync(x => x.SetContainerPermissionsAsync(container, publicAccessType));
     }
 }

@@ -185,12 +185,17 @@ namespace AzureStorage.Blob
 
         public Task ReleaseLeaseAsync(string container, string key, string leaseId)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public Task RenewLeaseAsync(string container, string key, string leaseId)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
+        }
+
+        public Task SetContainerPermissionsAsync(string container, BlobContainerPublicAccessType publicAccessType)
+        {
+            return Task.CompletedTask;
         }
     }
 }

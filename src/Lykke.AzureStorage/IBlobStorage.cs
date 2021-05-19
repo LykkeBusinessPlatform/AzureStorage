@@ -29,7 +29,19 @@ namespace AzureStorage
 
         Task<bool> HasBlobAsync(string container, string key);
 
+        /// <summary>
+        /// Creates blob container if it doesn't exist
+        /// </summary>
+        /// <param name="container">Container name</param>
+        /// <returns>True if blob container was created, false otherwise</returns>
         Task<bool> CreateContainerIfNotExistsAsync(string container);
+
+        /// <summary>
+        /// Set public access permissions to blob container.
+        /// </summary>
+        /// <param name="container">Container name</param>
+        /// <param name="publicAccessType">Public access type</param>
+        Task SetContainerPermissionsAsync(string container, BlobContainerPublicAccessType publicAccessType);
 
         /// <summary>Returns datetime of latest modification among all blobs</summary>
         Task<DateTime> GetBlobsLastModifiedAsync(string container);

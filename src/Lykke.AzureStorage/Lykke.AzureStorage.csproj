@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Lykke.AzureStorage</AssemblyName>
-    <PackageId>Lykke.AzureStorage</PackageId>
+    <PackageId>LykkeBiz.AzureStorage</PackageId>
     <Version>1.0.1</Version>
   </PropertyGroup>
 

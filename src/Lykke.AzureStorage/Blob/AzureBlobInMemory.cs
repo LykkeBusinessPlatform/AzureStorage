@@ -56,9 +56,7 @@ namespace AzureStorage.Blob
         private readonly Dictionary<string, Dictionary<string, BlobAttributes>> _blobsAttributes =
             new Dictionary<string, Dictionary<string, BlobAttributes>>();
 
-
         private readonly object _lockObject = new object();
-
 
         private Dictionary<string, byte[]> GetBlob(string container)
         {
@@ -259,12 +257,17 @@ namespace AzureStorage.Blob
 
         public Task ReleaseLeaseAsync(string container, string key, string leaseId)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public Task RenewLeaseAsync(string container, string key, string leaseId)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
+        }
+
+        public Task SetContainerPermissionsAsync(string container, BlobContainerPublicAccessType publicAccessType)
+        {
+            return Task.CompletedTask;
         }
     }
 }

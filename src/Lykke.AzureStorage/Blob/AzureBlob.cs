@@ -138,6 +138,13 @@ namespace AzureStorage.Blob
             return await containerRef.CreateIfNotExistsAsync(GetRequestOptions(), null);
         }
 
+        public Task SetContainerPermissionsAsync(string container, BlobContainerPublicAccessType publicAccessType)
+        {
+            var containerRef = GetContainerReference(container);
+            var perm = new BlobContainerPermissions { PublicAccess = publicAccessType };
+            return containerRef.SetPermissionsAsync(perm);
+        }
+
         public Task<bool> HasBlobAsync(string container, string key)
         {
             NameValidator.ValidateBlobName(key);
